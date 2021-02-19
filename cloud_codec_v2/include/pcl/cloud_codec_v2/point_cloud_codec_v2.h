@@ -81,8 +81,8 @@ namespace pcl{
        typedef OctreePointCloudCompression<PointT,LeafT,BranchT,OctreeT> MacroBlockTree;
 
         // Boost shared pointers
-        typedef boost::shared_ptr<OctreePointCloudCodecV2<PointT, LeafT, BranchT, OctreeT> > Ptr;
-        typedef boost::shared_ptr<const OctreePointCloudCodecV2<PointT, LeafT, BranchT, OctreeT> > ConstPtr;
+        typedef pcl::shared_ptr<OctreePointCloudCodecV2<PointT, LeafT, BranchT, OctreeT> > Ptr;
+        typedef pcl::shared_ptr<const OctreePointCloudCodecV2<PointT, LeafT, BranchT, OctreeT> > ConstPtr;
 
         typedef typename OctreeT::LeafNode LeafNode;
         typedef typename OctreeT::BranchNode BranchNode;
@@ -221,14 +221,14 @@ namespace pcl{
        * less than 'num_points' other points in that cloud within distance 'radius'
        */
       static void
-      remove_outliers (vector<PointCloudPtr> &point_clouds, int num_points, double radius, unsigned int debug_level=0);
+      remove_outliers (std::vector<PointCloudPtr> &point_clouds, int num_points, double radius, unsigned int debug_level=0);
       /** \brief
        *  \param point_clouds: an vector of suitably aligned pointers to point_clouds to be inspected and modified
        * to normalize their bouding boxes s.t. they effectivly can be used for interframe coding.
        * \\returns the common bounding box for \\ref point clouds
        */
       static BoundingBox
-      normalize_pointclouds (vector<PointCloudPtr> &point_clouds, vector<BoundingBox, Eigen::aligned_allocator<BoundingBox> > &bouding_boxes, double bb_expand_factor, vector<float> dyn_range, vector<float> offset, unsigned int debug_level=0);
+      normalize_pointclouds (std::vector<PointCloudPtr> &point_clouds, std::vector<BoundingBox, Eigen::aligned_allocator<BoundingBox> > &bouding_boxes, double bb_expand_factor, std::vector<float> dyn_range, std::vector<float> offset, unsigned int debug_level=0);
         
       static void
       restore_scaling (PointCloudPtr &point_clouds, const BoundingBox& bb);

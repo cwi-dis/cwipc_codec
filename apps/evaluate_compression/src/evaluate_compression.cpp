@@ -46,6 +46,6 @@
 
 
 int main(int argc, char * argv[]) {
-  evaluate_compression_impl<PointXYZRGB> evaluator(argc, argv);
+  evaluate_compression_impl<pcl::PointXYZRGB> evaluator(argc, argv);
   return evaluator.evaluate() == true ? 0 : -1;
 }

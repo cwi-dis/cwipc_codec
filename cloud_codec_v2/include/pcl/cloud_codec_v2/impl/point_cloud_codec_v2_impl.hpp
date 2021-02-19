@@ -224,7 +224,7 @@ namespace pcl{
     template<typename PointT, typename LeafT, typename BranchT, typename OctreeT> bool
       OctreePointCloudCodecV2<PointT, LeafT, BranchT, OctreeT>::decodePointCloud (
       std::istream& compressed_tree_data_in_arg,
-      PointCloudPtr &cloud_arg, uint64_t &tmstmp)
+      PointCloudPtr &cloud_arg, std::uint64_t &tmstmp)
     {
 		//std::cout << "\n Entered cloud codec v2 \n";
 		//std::cout << "\n Size of compressed frame" << sizeof(compressed_tree_data_in_arg);
@@ -1870,7 +1870,7 @@ namespace pcl{
       *  \param point_clouds: an array of pointers to point_clouds to be inspected and modified
       * by \ref pcl_outlier_filter.
       */
-    template<typename PointT,  typename LeafT, typename BranchT, typename OctreeT> void OctreePointCloudCodecV2<PointT, LeafT, BranchT, OctreeT>::remove_outliers (vector<PointCloudPtr> &point_clouds, int min_points, double radius, unsigned int debug_level)
+    template<typename PointT,  typename LeafT, typename BranchT, typename OctreeT> void OctreePointCloudCodecV2<PointT, LeafT, BranchT, OctreeT>::remove_outliers (std::vector<PointCloudPtr> &point_clouds, int min_points, double radius, unsigned int debug_level)
     {
       // apply a radius filter to remove outliers
       typedef OctreePointCloudCompression<PointT> colorOctreeCodec;
@@ -1901,7 +1901,7 @@ namespace pcl{
       *  \param point_clouds: a vector of pointers to point_clouds to be inspected and modified
       * to normalize their bouding boxes s.t. they effectivly can be used for interframe coding.
       */
-    template<typename PointT, typename LeafT, typename BranchT, typename OctreeT> BoundingBox OctreePointCloudCodecV2<PointT, LeafT, BranchT, OctreeT>::normalize_pointclouds(vector<PointCloudPtr> &point_clouds, vector<BoundingBox, Eigen::aligned_allocator<BoundingBox> > &bounding_boxes, double bb_expand_factor, vector<float> dynamic_range, vector<float> offset, unsigned int debug_level)
+    template<typename PointT, typename LeafT, typename BranchT, typename OctreeT> BoundingBox OctreePointCloudCodecV2<PointT, LeafT, BranchT, OctreeT>::normalize_pointclouds(std::vector<PointCloudPtr> &point_clouds, std::vector<BoundingBox, Eigen::aligned_allocator<BoundingBox> > &bounding_boxes, double bb_expand_factor, std::vector<float> dynamic_range, std::vector<float> offset, unsigned int debug_level)
     {
       Eigen::Vector4f min_pt_bb(0,0,0,0);
       Eigen::Vector4f max_pt_bb;
@@ -1926,7 +1926,7 @@ namespace pcl{
         
         pcl::getMinMax3D<PointT>(*point_clouds[k],min_pt,max_pt);
           
-        if (debug_level > 3) cerr << "[ " << min_pt.x() << "," << min_pt.y() << "," << min_pt.z() << "]    [" << max_pt.x() << "," << max_pt.y() << "," << max_pt.z() <<"]" << endl;
+        if (debug_level > 3) std::cerr << "[ " << min_pt.x() << "," << min_pt.y() << "," << min_pt.z() << "]    [" << max_pt.x() << "," << max_pt.y() << "," << max_pt.z() <<"]" << std::endl;
         
         // check if min fits bounding box, otherwise adapt the bounding box
         if( !( (min_pt.x() > min_pt_bb.x()) && (min_pt.y() > min_pt_bb.y()) && (min_pt.z() > min_pt_bb.z())))
@@ -1955,7 +1955,7 @@ namespace pcl{
           
           is_bb_init = true;
           
-          cout << "re-intialized bounding box !!! " << endl;
+          std::cout << "re-intialized bounding box !!! " << std::endl;
         }
         else
           aligned_flags[k] = true;

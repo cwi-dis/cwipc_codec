@@ -16,7 +16,7 @@
 #include <pcl/point_cloud.h>
 #include <pcl/cloud_codec_v2/point_cloud_codec_v2.h>
 
-using namespace std;
+// xxxjack using namespace std;
 
 // Some parameters that will eventually be customizable again
 const int num_threads = 1;
@@ -145,7 +145,7 @@ private:
         double point_resolution = std::pow ( 2.0, -1.0 * m_params.octree_bits);
         double octree_resolution = std::pow ( 2.0, -1.0 * m_params.octree_bits);
         m_encoder = NULL;
-        m_encoder = boost::shared_ptr<pcl::io::OctreePointCloudCodecV2<cwipc_pcl_point> > (
+        m_encoder = pcl::shared_ptr<pcl::io::OctreePointCloudCodecV2<cwipc_pcl_point> > (
             new pcl::io::OctreePointCloudCodecV2<cwipc_pcl_point> (
                   pcl::io::MANUAL_CONFIGURATION,
                   false,
@@ -167,7 +167,7 @@ private:
         m_remaining_frames_in_gop = m_params.gop_size;
 	}
 	
-	boost::shared_ptr<pcl::io::OctreePointCloudCodecV2<cwipc_pcl_point> > m_encoder;
+	pcl::shared_ptr<pcl::io::OctreePointCloudCodecV2<cwipc_pcl_point> > m_encoder;
     cwipc_encoder_params m_params;
     void *m_result;
     size_t m_result_size;
@@ -275,8 +275,8 @@ public:
         //Convert buffer to stringstream for encoding
         std::string str((char *)buffer, bufferSize);
         std::stringstream istream(str);
-        boost::shared_ptr<pcl::io::OctreePointCloudCodecV2<cwipc_pcl_point> > decoder_V2_;
-        decoder_V2_ = boost::shared_ptr<pcl::io::OctreePointCloudCodecV2<cwipc_pcl_point> > (
+        pcl::shared_ptr<pcl::io::OctreePointCloudCodecV2<cwipc_pcl_point> > decoder_V2_;
+        decoder_V2_ = pcl::shared_ptr<pcl::io::OctreePointCloudCodecV2<cwipc_pcl_point> > (
             new pcl::io::OctreePointCloudCodecV2<cwipc_pcl_point> (
                 pcl::io::MANUAL_CONFIGURATION,
                 false,

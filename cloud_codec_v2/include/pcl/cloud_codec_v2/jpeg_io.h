@@ -43,6 +43,10 @@
 \author Rufael Mekuria rufael.mekuria@cwi.nl
 */
 
+#ifndef PCL_EXPORTS
+// xxxjack PCL_EXPORTS seems non-existent in pcl 1.11.
+#define PCL_EXPORTS
+#endif
 namespace pcl{
   
   namespace io{

@@ -51,10 +51,10 @@
 #include <quality_metrics.h>
 
 //using namespace std;
-using namespace pcl;
-using namespace pcl::io;
-using namespace pcl::console;
-using namespace pcl::search;
+// xxxjack using namespace pcl;
+// xxxjack using namespace pcl::io;
+// xxxjack using namespace pcl::console;
+// xxxjack using namespace pcl::search;
 
 	/**
 	\brief helper function to convert RGB to YUV
@@ -80,12 +80,12 @@ using namespace pcl::search;
 	*/
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////
     template<typename PointT> void
-    computeQualityMetric (PointCloud<PointT>  &cloud_a, PointCloud<PointT>  &cloud_b, QualityMetric & qual_metric)
+    computeQualityMetric (pcl::PointCloud<PointT>  &cloud_a, pcl::PointCloud<PointT>  &cloud_b, QualityMetric & qual_metric)
 	{
-		print_highlight (stderr, "Computing Quality Metrics for Point Clouds !!\n");
+		pcl::console::print_highlight (stderr, "Computing Quality Metrics for Point Clouds !!\n");
 
 		//! we log time past in computing the quality metric
-		TicToc tt;
+		pcl::console::TicToc tt;
 		tt.tic ();
 
 		// compare A to B
@@ -197,20 +197,28 @@ using namespace pcl::search;
 		psnr_colors_yuv[1] = 10 * std::log10( 1.0 /mse_colors_yuv[1]);
 		psnr_colors_yuv[2] = 10 * std::log10( 1.0 /mse_colors_yuv[2]);
 
-		print_info ("[done, "); print_value ("%g", tt.toc ()); print_info (" ms \n");
+        pcl::console::print_info ("[done, ");
+        pcl::console::print_value ("%g", tt.toc ());
+        pcl::console::print_info (" ms \n");
 		//print_info ("A->B: "); print_value ("%f\n", max_dist_a);
 		//print_info ("B->A: "); print_value ("%f\n", max_dist_b);
-		print_info ("Symmetric Geometric Hausdorff Distance: "); print_value ("%f", dist_h);
-		print_info (" ]\n\n");
+        pcl::console::print_info ("Symmetric Geometric Hausdorff Distance: ");
+        pcl::console::print_value ("%f", dist_h);
+        pcl::console::print_info (" ]\n\n");
 		//print_info ("A->B : "); print_value ("%f rms\n", rms_dist_a);
 		//print_info ("B->A: "); print_value ("%f rms\n", rms_dist_b);
-		print_info ("Symmetric Geometric Root Mean Square Distance: "); print_value ("%f\n", dist_rms);
-		print_info ("Geometric PSNR: "); print_value ("%f  dB", peak_signal_to_noise_ratio);
-		print_info (" ]\n\n");
-		print_info ("A->B color psnr Y: "); print_value ("%f dB ", (float) psnr_colors_yuv[0]);
-		print_info ("A->B color psnr U: "); print_value ("%f dB ", (float) psnr_colors_yuv[1]);
-		print_info ("A->B color psnr V: "); print_value ("%f dB ", (float) psnr_colors_yuv[2]);
-		print_info (" ]\n");
+        pcl::console::print_info ("Symmetric Geometric Root Mean Square Distance: ");
+        pcl::console::print_value ("%f\n", dist_rms);
+        pcl::console::print_info ("Geometric PSNR: ");
+        pcl::console::print_value ("%f  dB", peak_signal_to_noise_ratio);
+        pcl::console::print_info (" ]\n\n");
+        pcl::console::print_info ("A->B color psnr Y: ");
+        pcl::console::print_value ("%f dB ", (float) psnr_colors_yuv[0]);
+        pcl::console::print_info ("A->B color psnr U: ");
+        pcl::console::print_value ("%f dB ", (float) psnr_colors_yuv[1]);
+        pcl::console::print_info ("A->B color psnr V: ");
+        pcl::console::print_value ("%f dB ", (float) psnr_colors_yuv[2]);
+        pcl::console::print_info (" ]\n");
 
 		qual_metric.in_point_count = cloud_a.points.size ();
 		qual_metric.out_point_count =	cloud_b.points.size ();

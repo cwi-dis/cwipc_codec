@@ -61,8 +61,8 @@ namespace pcl
     public:
       // public typedefs
       typedef pcl::PointCloud<PointT> PointCloud;
-      typedef boost::shared_ptr<PointCloud> PointCloudPtr;
-      typedef boost::shared_ptr<const PointCloud> PointCloudConstPtr;
+      typedef pcl::shared_ptr<PointCloud> PointCloudPtr;
+      typedef pcl::shared_ptr<const PointCloud> PointCloudConstPtr;
 
       /** \brief Constructor. */
       PointCodingV2 () : PointCoding<PointT>()
@@ -86,9 +86,9 @@ namespace pcl
         unsigned char diffX, diffY, diffZ;
 
         // differentially encode point coordinates and truncate overflow
-        diffX = static_cast<unsigned char> (max (-127, min<int>(127, static_cast<int> ((idxPoint.x - referencePoint_arg[0])  / this->pointCompressionResolution_))));
-        diffY = static_cast<unsigned char> (max (-127, min<int>(127, static_cast<int> ((idxPoint.y - referencePoint_arg[1])  / this->pointCompressionResolution_))));
-        diffZ = static_cast<unsigned char> (max (-127, min<int>(127, static_cast<int> ((idxPoint.z - referencePoint_arg[2])  / this->pointCompressionResolution_))));
+        diffX = static_cast<unsigned char> (std::max (-127, std::min<int>(127, static_cast<int> ((idxPoint.x - referencePoint_arg[0])  / this->pointCompressionResolution_))));
+        diffY = static_cast<unsigned char> (std::max (-127, std::min<int>(127, static_cast<int> ((idxPoint.y - referencePoint_arg[1])  / this->pointCompressionResolution_))));
+        diffZ = static_cast<unsigned char> (std::max (-127, std::min<int>(127, static_cast<int> ((idxPoint.z - referencePoint_arg[2])  / this->pointCompressionResolution_))));
 
         // store information in differential point vector
         this->pointDiffDataVector_.push_back (diffX);

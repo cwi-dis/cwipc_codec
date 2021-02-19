@@ -309,7 +309,7 @@ namespace pcl{
         }
 
         // copy the serialize buffer to the output vector
-        stringstream l_outstr;
+        std::stringstream l_outstr;
         cdat.serialize(l_outstr);
         out_data.resize(l_outstr.str().size());
         std::string s_dat = l_outstr.str();
@@ -326,7 +326,7 @@ namespace pcl{
         std::string data;
         data.resize(in_vec.size());
         std::copy((char *)in_vec.data(),(char *)in_vec.data() + in_vec.size(),(char *) data.c_str());
-        stringstream l_instr(data);
+        std::stringstream l_instr(data);
         JPEGLineData cdat;
         cdat.deserialize(l_instr);
 
