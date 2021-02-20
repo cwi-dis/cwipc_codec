@@ -179,7 +179,7 @@
 		PointT l_min_signal;
 		
 		// calculate peak geometric signal value
-		getMinMax3D<PointT>(cloud_a,l_min_signal,l_max_signal);
+		pcl::getMinMax3D<PointT>(cloud_a,l_min_signal,l_max_signal);
 
 		// calculate max energy of point
 		float l_max_geom_signal_energy = l_max_signal.x * l_max_signal.x 
