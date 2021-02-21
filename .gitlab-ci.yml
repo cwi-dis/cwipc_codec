@@ -18,7 +18,7 @@ build_linux:
     - apt-get install -y software-properties-common
     - apt-get install -y git
     - apt-get install -y cmake
-    - apt-get install -y libpcl-dev libpcl-common1.8 libpcl-io1.8
+    - apt-get install -y libpcl-dev
     - apt-get install -y libturbojpeg0-dev
 # Install Deployment repo and dependencies
     - apt-get install -y python3-pip
