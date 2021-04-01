@@ -33,7 +33,9 @@
 
 find_path(JPEG_Turbo_INCLUDE_DIR turbojpeg.h)
 
-set(JPEG_Turbo_NAMES ${JPEG_Turbo_NAMES} turbojpeg)
+# codec want libjpeg-compatible library, not turbojpeg library:
+# set(JPEG_Turbo_NAMES ${JPEG_Turbo_NAMES} turbojpeg)
+set(JPEG_Turbo_NAMES ${JPEG_Turbo_NAMES} jpeg)
 find_library(JPEG_Turbo_LIBRARY NAMES ${JPEG_Turbo_NAMES} )
 
 # handle the QUIETLY and REQUIRED arguments and set JPEG_FOUND to TRUE if
