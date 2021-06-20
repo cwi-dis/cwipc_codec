@@ -52,9 +52,11 @@ cmake_policy(SET CMP0074 NEW)
 #
 # Find cwipc_util
 #
-find_package(cwipc_util REQUIRED)
-include_directories(${cwipc_util_INCLUDE_DIRS})
-link_directories(${cwipc_util_LIBRARY_DIRS})
+if( CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR )
+	find_package(cwipc_util REQUIRED)
+	include_directories(${cwipc_util_INCLUDE_DIRS})
+	link_directories(${cwipc_util_LIBRARY_DIRS})
+endif()
 
 set(SUBSYS_NAME cwi_pcl_codec)
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/;${CMAKE_MODULE_PATH}")
