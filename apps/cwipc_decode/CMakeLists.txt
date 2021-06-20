@@ -10,4 +10,4 @@ target_link_libraries(cwipc_decode cwipc_codec ${PCL_LIBRARIES})
 
 install(TARGETS cwipc_decode RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
-add_test(NAME cwipc_decode COMMAND cwipc_decode ${CMAKE_SOURCE_DIR}/tests/fixtures/compressed/pcl_frame1.cwicpc ./pcl_frame1.ply )
+add_test(NAME cwipc_decode COMMAND cwipc_decode ${CMAKE_CURRENT_SOURCE_DIR}/../../tests/fixtures/compressed/pcl_frame1.cwicpc ./pcl_frame1.ply )

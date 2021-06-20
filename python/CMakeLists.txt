@@ -24,24 +24,24 @@ else()
 endif()
 
 if(Python3_FOUND)
-	add_test(NAME run_python_tests
+	add_test(NAME cwipc_codec_python_tests
 		COMMAND ${Python3_EXECUTABLE} test_cwipc_codec.py
 		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 	)
 	
 	# Ensure the cwipc_codec dynamic library and cwipc python module can be found by the tests
 	if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-		set_property(TEST run_python_tests PROPERTY ENVIRONMENT DYLD_LIBRARY_PATH=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:$ENV{DYLD_LIBRARY_PATH})
-		set_property(TEST run_python_tests APPEND PROPERTY ENVIRONMENT PYTHONPATH=${cwipc_util_PYTHON_DIRS}:$ENV{PYTHONPATH})
+		set_property(TEST cwipc_codec_python_tests PROPERTY ENVIRONMENT DYLD_LIBRARY_PATH=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:$ENV{DYLD_LIBRARY_PATH})
+		set_property(TEST cwipc_codec_python_tests APPEND PROPERTY ENVIRONMENT PYTHONPATH=${cwipc_util_PYTHON_DIRS}:$ENV{PYTHONPATH})
 	endif()
 	if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-		set_property(TEST run_python_tests PROPERTY ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:${cwipc_util_LIBRARY_DIRS}:$ENV{LD_LIBRARY_PATH})
-		set_property(TEST run_python_tests APPEND PROPERTY ENVIRONMENT PYTHONPATH=${cwipc_util_PYTHON_DIRS}:$ENV{PYTHONPATH})
+		set_property(TEST cwipc_codec_python_tests PROPERTY ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:${cwipc_util_LIBRARY_DIRS}:$ENV{LD_LIBRARY_PATH})
+		set_property(TEST cwipc_codec_python_tests APPEND PROPERTY ENVIRONMENT PYTHONPATH=${cwipc_util_PYTHON_DIRS}:$ENV{PYTHONPATH})
 	endif()
 	if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 		# Jack doesn't understand why modifying PATH doesn't seem to work on Windows...
 		# Jack doesn't understand why we need the "Release" here, which should already be in CMAKE_RUNTIME_OUTPUT_DIRECTORY...
-		set_property(TEST run_python_tests PROPERTY ENVIRONMENT CWIPC_TEST_DLL=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Release/cwipc_codec.dll)
-		set_property(TEST run_python_tests APPEND PROPERTY ENVIRONMENT PYTHONPATH=${cwipc_util_PYTHON_DIRS};$ENV{PYTHONPATH})
+		set_property(TEST cwipc_codec_python_tests PROPERTY ENVIRONMENT CWIPC_TEST_DLL=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Release/cwipc_codec.dll)
+		set_property(TEST cwipc_codec_python_tests APPEND PROPERTY ENVIRONMENT PYTHONPATH=${cwipc_util_PYTHON_DIRS};$ENV{PYTHONPATH})
 	endif()
 endif()

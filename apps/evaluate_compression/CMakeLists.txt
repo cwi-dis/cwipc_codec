@@ -134,4 +134,4 @@ add_definitions(${VISUALIZATION_DEFINITIONS})
 add_executable(${SUBSYS_NAME} ${srcs} ${incs} ${impl_incs})
 target_link_libraries(${SUBSYS_NAME} ${${PROJECT_NAME}_LIBRARIES})
 
-add_test(NAME ${SUBSYS_NAME} COMMAND ${SUBSYS_NAME} -o ${SUBSYS_NAME}_output ${CMAKE_SOURCE_DIR}/tests/fixtures/input )
+add_test(NAME ${SUBSYS_NAME} COMMAND ${SUBSYS_NAME} -o ${SUBSYS_NAME}_output ${CMAKE_CURRENT_SOURCE_DIR}/../../tests/fixtures/input )
