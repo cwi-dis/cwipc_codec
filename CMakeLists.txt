@@ -87,7 +87,7 @@ set(${PROJECT_NAME}_LIBRARY_DIRS ${PROJECT_SOURCE_DIR}/lib
     CACHE INTERNAL "${PROJECT_NAME}: Library Directories" FORCE)
 
 set(${PROJECT_NAME}_LIBRARIES
-                                 ${JPEG_Turbo_LIBRARY}
+                                 ${JPEG_Turbo_LIBRARIES}
                                  ${VTK_LIBRARIES}
                                  ${Boost_LIBRARIES}
                                  ${PCL_LIBRARIES}
