@@ -44,9 +44,11 @@ if(Python3_FOUND)
 		set_property(TEST cwipc_codec_python_tests APPEND PROPERTY ENVIRONMENT PYTHONPATH=${cwipc_util_PYTHON_DIRS}:$ENV{PYTHONPATH})
 	endif()
 	if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-		# Jack doesn't understand why modifying PATH doesn't seem to work on Windows...
-		# Jack doesn't understand why we need the "Release" here, which should already be in CMAKE_RUNTIME_OUTPUT_DIRECTORY...
-		set_property(TEST cwipc_codec_python_tests PROPERTY ENVIRONMENT CWIPC_TEST_DLL=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Release/cwipc_codec.dll)
+		string(REPLACE ";" "\\;" prevpath "$ENV{PATH}")
+		set_property(
+			TEST cwipc_codec_python_tests
+			APPEND PROPERTY ENVIRONMENT "PATH=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}Release\;${prevpath}"
+		)
 		set_property(TEST cwipc_codec_python_tests APPEND PROPERTY ENVIRONMENT PYTHONPATH=${cwipc_util_PYTHON_DIRS};$ENV{PYTHONPATH})
 	endif()
 endif()
