@@ -3,6 +3,11 @@ cmake_minimum_required(VERSION 3.10.0)
 set(INSTALL_PATH ${CMAKE_INSTALL_DATADIR}/cwipc_codec/python)
 set(DEST_INSTALL_PATH ${CMAKE_INSTALL_PREFIX}/${INSTALL_PATH})
 
+# This is gross. We need to set the directory where the cwipc module can be found while building with submodules.
+if(NOT CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
+	get_filename_component(cwipc_util_PYTHON_DIRS ${PROJECT_SOURCE_DIR}/../cwipc_util/python ABSOLUTE)
+endif()
+
 find_package(Python3 COMPONENTS Interpreter)
 
 # Unfortunately Ubuntu 18.04 doesn't have the Python3 package (introduced in cmake 3.12 or so). Work around it.
