@@ -35,7 +35,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-cmake_minimum_required(VERSION 2.8.10 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.16)
 set(SUBSYS_NAME evaluate_compression)
 set(SUBSYS_DESC "Evaluation program for Point Cloud Compression V2 (using JPEG compression")
 

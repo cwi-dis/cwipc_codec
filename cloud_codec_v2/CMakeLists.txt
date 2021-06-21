@@ -35,7 +35,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-cmake_minimum_required(VERSION 2.8.10 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.16.0)
 set(SUBSYS_NAME cloud_codec_v2)
 set(SUBSYS_DESC "Extensions for Point Cloud Compression for JPEG I/O")
 
