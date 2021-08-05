@@ -209,15 +209,21 @@ public:
 			}
 			pc = newpc;
 		}
-        std::vector<std::thread*> threads;
-		for (auto enc : m_encoders) {
-            std::thread* thr = new std::thread([enc, pc] { enc->feed(pc); });
-            threads.push_back(thr);
-		}
-        for (std::thread* thr : threads) {
-            thr->join();
+        if (m_encoders.size() == 1) {
+            m_encoders[0]->feed(pc);
+        } else {
+            // Fire up threads for all decoders in parallel, and wait for all of them.
+            // Very simple to implement, may be good enough.
+            std::vector<std::thread*> threads;
+            for (auto enc : m_encoders) {
+                std::thread* thr = new std::thread([enc, pc] { enc->feed(pc); });
+                threads.push_back(thr);
+            }
+            for (std::thread* thr : threads) {
+                thr->join();
+            }
         }
-		if (newpc) {
+        if (newpc) {
 			// Free temporary pointcloud, if we allocated one
 			newpc->free();
 		}
