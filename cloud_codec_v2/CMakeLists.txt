@@ -79,7 +79,7 @@ if(${PCL_INSTALLED})
 endif(${PCL_INSTALLED})
 
 include_directories(${${PROJECT_NAME}_INCLUDE_DIRS})
-add_library(${LIB_NAME} ${srcs} ${incs} ${impl_incs})
+add_library(${LIB_NAME} STATIC ${srcs} ${incs} ${impl_incs})
 set_property(TARGET ${LIB_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)
 target_link_libraries(${LIB_NAME} ${${PROJECT_NAME}_LIBRARIES})
 

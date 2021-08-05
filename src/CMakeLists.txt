@@ -41,38 +41,38 @@ cmake_minimum_required(VERSION 3.10.0)
 add_library(cwipc_codec SHARED cwipc_codec.cpp cwipc_pcl_additions.cpp)
 
 target_sources(cwipc_codec
-	PRIVATE
-	"../include/cwipc_codec/api.h"
+	PRIVATE	"../include/cwipc_codec/api.h"
 )
 
-target_include_directories(
-    cwipc_codec PUBLIC
-	$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include> 
-)
-target_include_directories(
-    cwipc_codec PRIVATE
-	"../cloud_codec_v2/include"
-	"../jpeg_io/include"
-	${PCL_INCLUDE_DIRS}
+target_include_directories(cwipc_codec
+	PUBLIC 
+		$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include> 
+		$<INSTALL_INTERFACE:include> 
+	PRIVATE 
+		"../cloud_codec_v2/include" 
+		"../jpeg_io/include" 
+		${PCL_INCLUDE_DIRS}
 )
 
-target_link_libraries(cwipc_codec PUBLIC cwipc_util PRIVATE cloud_codec_v2 ${PCL_LIBRARIES} ${Boost_LIBRARIES} ${JPEG_Turbo_LIBRARY})
-# target_link_libraries(cwipc_codec PUBLIC cwipc_util PRIVATE ${${PROJECT_NAME}_LIBRARIES})
+target_link_libraries(cwipc_codec 
+	PUBLIC cwipc_util 
+	PRIVATE cloud_codec_v2 ${PCL_LIBRARIES} ${Boost_LIBRARIES} ${JPEG_Turbo_LIBRARY})
 
 install(TARGETS cwipc_codec
     EXPORT cwipc_codec
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_PREFIX}/include/cwipc_codec"
+    PUBLIC_HEADER DESTINATION include/cwipc_codec
 )
 
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/cwipc_codec
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
-install(FILES ${PROJECT_SOURCE_DIR}/CMakeFiles/cwipc_codec-config.cmake DESTINATION lib/cmake/cwipc_codec)
+install(FILES ${PROJECT_SOURCE_DIR}/CMakeFiles/cwipc_codec-config.cmake 
+	DESTINATION lib/cmake/cwipc_codec)
 
-install(EXPORT cwipc_codec DESTINATION lib/cmake/cwipc_codec)
+install(EXPORT cwipc_codec 
+	DESTINATION lib/cmake/cwipc_codec)
 
