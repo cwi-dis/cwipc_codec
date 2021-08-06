@@ -7,7 +7,7 @@
 #define COUNT 10
 #define OCTREE_BITS 9
 #define JPEG_QUALITY 85
-#define TILENUMBER -1
+#define TILENUMBER 2
 
 int main(int argc, char** argv)
 {
@@ -40,7 +40,12 @@ int main(int argc, char** argv)
 	param.tilenumber = TILENUMBER;
 
 	char *errorString;
-    cwipc_encoder *encoder = cwipc_new_encoder(CWIPC_ENCODER_PARAM_VERSION, &param, &errorString, CWIPC_API_VERSION);
+    cwipc_encodergroup *encodergroup = cwipc_new_encodergroup(&errorString, CWIPC_API_VERSION);
+    if (encodergroup == NULL) {
+        std::cerr << argv[0] << ": Could not create encodergroup: " << errorString << std::endl;
+        return 1;
+    }
+    cwipc_encoder *encoder = encodergroup->addencoder(CWIPC_ENCODER_PARAM_VERSION, &param, &errorString);
     if (encoder == NULL) {
     	std::cerr << argv[0] << ": Could not create encoder: " << errorString << std::endl;
     	return 1;
@@ -82,7 +87,7 @@ int main(int argc, char** argv)
     std::cerr << std::fixed << std::setprecision(2) << argv[0] << ": per iteration: cpu: " <<  delta_cpu << " ms, real: " << delta_wall << "ms" << std::endl;
 
     pc->free();	// After feeding the pointcloud into the encoder we can free it.
-    encoder->free(); // We don't need the encoder anymore.
+    encodergroup->free(); // We don't need the encoder anymore.
     return 0;
 }
 
