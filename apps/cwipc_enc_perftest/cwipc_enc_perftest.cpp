@@ -7,7 +7,7 @@
 #define COUNT 10
 #define OCTREE_BITS 9
 #define JPEG_QUALITY 85
-#define TILENUMBER 0
+#define TILENUMBER -1
 
 int main(int argc, char** argv)
 {
@@ -26,7 +26,7 @@ int main(int argc, char** argv)
         std::cerr << argv[0] << ": Error reading pointcloud from " << argv[1] << ": " << errorMessage << std::endl;
         return 1;
     }
-    std::cerr << "Read pointcloud successfully, " << pc->get_uncompressed_size() << " bytes (uncompressed)" << std::endl;
+    std::cerr << argv[0] << ": Read pointcloud, " << pc->count() << " points, " << pc->get_uncompressed_size() << " bytes (uncompressed)" << std::endl;
     //
     // Compress
     //
@@ -48,6 +48,7 @@ int main(int argc, char** argv)
     
     auto t0_cpu = std::clock();
     auto t0_wall = std::chrono::high_resolution_clock::now();
+    size_t bufSize;
     
     for (int i=0; i<COUNT; i++) {
     	encoder->feed(pc);
@@ -56,7 +57,7 @@ int main(int argc, char** argv)
 			std::cerr << argv[0] << ": Encoder did not create compressed data" << std::endl;
 			return 1;
 		}
-		size_t bufSize = encoder->get_encoded_size();
+        bufSize = encoder->get_encoded_size();
 		char *buffer = (char *)malloc(bufSize);
 		if (buffer == NULL) {
 			std::cerr << argv[0] << ": Could not allocate " << bufSize << " bytes." << std::endl;
@@ -77,7 +78,8 @@ int main(int argc, char** argv)
     double delta_wall = std::chrono::duration<double, std::milli>(t1_wall - t0_wall).count();
 	delta_cpu /= COUNT;
 	delta_wall /= COUNT;
-	std::cerr << std::fixed << std::setprecision(2) << argv[0] << ": per iteration: cpu: " <<  delta_cpu << " ms, real: " << delta_wall << "ms" << std::endl;
+    std::cerr << argv[0] << ": Compressed " << COUNT << " times, output: " << bufSize << " bytes" << std::endl;
+    std::cerr << std::fixed << std::setprecision(2) << argv[0] << ": per iteration: cpu: " <<  delta_cpu << " ms, real: " << delta_wall << "ms" << std::endl;
 
     pc->free();	// After feeding the pointcloud into the encoder we can free it.
     encoder->free(); // We don't need the encoder anymore.
