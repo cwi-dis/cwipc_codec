@@ -82,7 +82,7 @@ public:
         std::stringstream comp_frame;
 		// Allocate an encoder if none is available (we are at the beginning of a GOP)
 		if (m_encoder == NULL)
-			alloc_encoder(pc->timestamp());
+			alloc_encoder();
 
         cwipc_pcl_pointcloud pcl_pc = pc->access_pcl_pointcloud();
         if (pcl_pc->size() == 0) {
@@ -100,7 +100,7 @@ public:
             m_encoder->octreeResolution = cellsize;
         }
 
-        m_encoder->encodePointCloud(pcl_pc, comp_frame);
+        m_encoder->encodePointCloud(pcl_pc, comp_frame, pc->timestamp());
 
 		/* Free the encoder if we are at the end of the GOP */
 		if (--m_remaining_frames_in_gop <= 0) {
@@ -141,7 +141,7 @@ public:
     };
     
 private:
-	void alloc_encoder(uint64_t timestamp) {
+	void alloc_encoder() {
 		// xxxjack note that feed() and alloc_encoder() are not thread-safe.
         double point_resolution = std::pow ( 2.0, -1.0 * m_params.octree_bits);
         double octree_resolution = std::pow ( 2.0, -1.0 * m_params.octree_bits);
@@ -157,7 +157,6 @@ private:
                   true, // do color encoding
                   8, // color bits
                   1, // color coding type
-                  timestamp,
                   false,
                   false, // not implemented
                   false, // do_connectivity_coding_ not implemented
@@ -299,7 +298,6 @@ public:
                 true,
                 8,
                 1,
-                0,
                 false,
                 false, // not implemented
                 false, // do_connectivity_coding_, not implemented
@@ -307,8 +305,8 @@ public:
                 num_threads
                 ));
         cwipc_pcl_pointcloud decpc = new_cwipc_pcl_pointcloud();
-        uint64_t tmStmp = 0;
-        bool ok = decoder_V2_->decodePointCloud(istream, decpc, tmStmp);
+        uint64_t timeStamp = 0;
+        bool ok = decoder_V2_->decodePointCloud(istream, decpc, timeStamp);
         if (decpc->size() == 1) {
             // Special case: single point (0,0,0,0,0,0) signals an empty pointcloud
             cwipc_pcl_point& pt(decpc->at(0));
@@ -320,7 +318,7 @@ public:
         }
         std::lock_guard<std::mutex> lock(m_result_mutex);
         if (ok) {
-            m_result = cwipc_from_pcl(decpc, tmStmp, NULL, CWIPC_API_VERSION);
+            m_result = cwipc_from_pcl(decpc, timeStamp, NULL, CWIPC_API_VERSION);
             m_result->_set_cellsize(decoder_V2_->octreeResolution);
         } else {
             m_result = NULL;

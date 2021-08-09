@@ -116,9 +116,7 @@ namespace pcl{
 			bool doColorEncoding_arg = true,
 			const unsigned char colorBitResolution_arg = 6,
 			const unsigned char colorCodingType_arg = 0,
-			uint64_t timeStamp_arg = 0,
-			//const unsigned char timeStamp_arg = 0,
-          bool doVoxelGridCentroid_arg = true, 
+		  bool doVoxelGridCentroid_arg = true, 
           bool createScalableStream_arg = true, 
           bool codeConnectivity_arg = false,
           int jpeg_quality_arg = 75,
@@ -133,7 +131,6 @@ namespace pcl{
           doColorEncoding_arg,
           colorBitResolution_arg), 
           color_coding_type_(colorCodingType_arg), 
-          _deprecatedTimeStamp(timeStamp_arg),
           octreeResolution(octreeResolution_arg),
           colorBitResolution(colorBitResolution_arg),
           jpeg_quality(jpeg_quality_arg),
@@ -181,23 +178,36 @@ namespace pcl{
         }
 
         void
-        encodePointCloud (const PointCloudConstPtr &cloud_arg, std::ostream& compressed_tree_data_out_arg);
+            encodePointCloud(const PointCloudConstPtr& cloud_arg, std::ostream& compressed_tree_data_out_arg) = delete;
+        void
+            encodePointCloud(const PointCloudConstPtr& cloud_arg, std::ostream& compressed_tree_data_out_arg, uint64_t timeStamp);
 
         bool
-        decodePointCloud (std::istream& compressed_tree_data_in_arg, PointCloudPtr &cloud_arg, uint64_t &tmstmp);
+            decodePointCloud(std::istream& compressed_tree_data_in_arg, PointCloudPtr& cloud_arg) = delete;
+        bool
+            decodePointCloud(std::istream& compressed_tree_data_in_arg, PointCloudPtr& cloud_arg, uint64_t& timeStamp);
+
+        void generatePointCloudDeltaFrame(const PointCloudConstPtr& icloud_arg, const PointCloudConstPtr& pcloud_arg, PointCloudPtr& out_cloud_arg,
+                std::ostream& i_coded_data, std::ostream& p_coded_data, bool icp_on_original, bool write_out_cloud) = delete;
+        virtual void
+            generatePointCloudDeltaFrame(const PointCloudConstPtr& icloud_arg, const PointCloudConstPtr& pcloud_arg, PointCloudPtr& out_cloud_arg,
+                std::ostream& i_coded_data, std::ostream& p_coded_data, bool icp_on_original, bool write_out_cloud, uint64_t timeStamp);
 
         virtual void
-        generatePointCloudDeltaFrame (const PointCloudConstPtr &icloud_arg, const PointCloudConstPtr &pcloud_arg, PointCloudPtr &out_cloud_arg, 
-            std::ostream& i_coded_data, std::ostream& p_coded_data, bool icp_on_original = false,bool write_out_cloud = true );
-
+            encodePointCloudDeltaFrame(const PointCloudConstPtr& icloud_arg, const PointCloudConstPtr& pcloud_arg, PointCloudPtr& out_cloud_arg,
+                std::ostream& i_coded_data, std::ostream& p_coded_data, bool icp_on_original, bool write_out_cloud) = delete;
         virtual void
-        encodePointCloudDeltaFrame (const PointCloudConstPtr &icloud_arg, const PointCloudConstPtr &pcloud_arg, PointCloudPtr &out_cloud_arg, 
-        std::ostream& i_coded_data, std::ostream& p_coded_data, bool icp_on_original = false,bool write_out_cloud = false);
+            encodePointCloudDeltaFrame(const PointCloudConstPtr& icloud_arg, const PointCloudConstPtr& pcloud_arg, PointCloudPtr& out_cloud_arg,
+                std::ostream& i_coded_data, std::ostream& p_coded_data, bool icp_on_original, bool write_out_cloud, uint64_t timeStamp);
 
         virtual bool
-        decodePointCloudDeltaFrame(const PointCloudConstPtr &icloud_arg, PointCloudPtr &out_cloud_arg,
-        std::istream& i_coded_data, std::istream& p_coded_data);
-      
+            decodePointCloudDeltaFrame(const PointCloudConstPtr& icloud_arg, PointCloudPtr& out_cloud_arg,
+                std::istream& i_coded_data, std::istream& p_coded_data) = delete;
+
+        virtual bool
+            decodePointCloudDeltaFrame(const PointCloudConstPtr& icloud_arg, PointCloudPtr& out_cloud_arg,
+                std::istream& i_coded_data, std::istream& p_coded_data, uint64_t& timeStamp);
+
         //! function to return performance metric
         uint64_t *
         getPerformanceMetrics()
@@ -264,11 +274,13 @@ namespace pcl{
 
         // protected functions overriding OctreePointCloudCompression
         
+        void writeFrameHeader(std::ostream& compressed_tree_data_out_arg) = delete;
         void
-        writeFrameHeader(std::ostream& compressed_tree_data_out_arg);
+        writeFrameHeader(std::ostream& compressed_tree_data_out_arg, uint64_t timeStamp);
 
+        void readFrameHeader(std::istream& compressed_tree_data_in_arg) = delete;
         void
-        readFrameHeader(std::istream& compressed_tree_data_in_arg);
+        readFrameHeader(std::istream& compressed_tree_data_in_arg, uint64_t& timeStamp);
 
         virtual void
         serializeTreeCallback (LeafT &leaf_arg, const OctreeKey& key_arg);
@@ -291,7 +303,6 @@ namespace pcl{
 
         uint32_t color_coding_type_; //! color coding with jpeg, graph transform, or differential encodings
     public:
-		uint64_t _deprecatedTimeStamp;
 		double  octreeResolution;
 		unsigned char colorBitResolution;
 		int jpeg_quality;

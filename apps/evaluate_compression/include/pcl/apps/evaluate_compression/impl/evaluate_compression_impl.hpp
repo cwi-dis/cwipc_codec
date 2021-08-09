@@ -377,14 +377,14 @@ evaluate_compression_impl<PointT>::complete_initialization ()
                            new pcl::io::OctreePointCloudCodecV2<PointT> (
                              pcl::io::MANUAL_CONFIGURATION,
                              show_statistics_,
-                             octree_bits_ > 0 ? std::pow ( 2.0, -1.0 * (octree_bits_ + enh_bits_) ) : // XXX
-                             point_resolution_,
-                             octree_bits_ > 0 ? std::pow ( 2.0, -1.0 * octree_bits_) : // XXX
-                             point_resolution_,
+                             (octree_bits_ > 0 ? std::pow ( 2.0, -1.0 * (octree_bits_ + enh_bits_) ) : // XXX
+                                point_resolution_),
+                             (octree_bits_ > 0 ? std::pow ( 2.0, -1.0 * octree_bits_) : // XXX
+                                point_resolution_),
                              true, // no intra voxel coding in this first version of the codec
                              0, // i_frame_rate,
-                             color_bits_ > 0 ? true : false,
-                             color_bits_,
+                             color_bits_ > 0 ? true : false, // doColorEncoding
+                             color_bits_, // colorResolution
                              color_coding_type_,
                              keep_centroid_,
                              create_scalable_, // not implemented
@@ -459,7 +459,7 @@ evaluate_compression_impl<PointT>::do_encoding (pcl::shared_ptr<pcl::PointCloud<
     if (algorithm_ == "V2")
     {
       tt.tic ();
-      encoder_V2_->encodePointCloud (pointcloud , *stream);
+      encoder_V2_->encodePointCloud (pointcloud , *stream, 0);
       qualityMetric.encoding_time_ms = tt.toc ();
       // store the partial bytes sizes
       uint64_t *c_sizes = encoder_V2_->getPerformanceMetrics ();
@@ -505,7 +505,8 @@ evaluate_compression_impl<PointT>::do_delta_encoding (pcl::shared_ptr<pcl::Point
 {
   pcl::console::TicToc tt;
   tt.tic ();
-  encoder_V2_->encodePointCloudDeltaFrame (i_cloud, p_cloud, out_cloud, *i_stream, *p_stream, icp_on_original_, false);
+  uint64_t ignoredTimeStamp = 0;
+  encoder_V2_->encodePointCloudDeltaFrame (i_cloud, p_cloud, out_cloud, *i_stream, *p_stream, icp_on_original_, false, ignoredTimeStamp);
   qualityMetric.encoding_time_ms = tt.toc ();
   qualityMetric.byte_count_octree_layer = i_stream->tellp ();
   qualityMetric.byte_count_centroid_layer = p_stream->tellp ();
@@ -523,7 +524,8 @@ evaluate_compression_impl<PointT>::do_delta_decoding (std::stringstream* i_strea
 {
   pcl::console::TicToc tt;
   tt.tic ();
-  if( !encoder_V2_->decodePointCloudDeltaFrame (i_cloud, out_cloud, *i_stream, *p_stream)) return false;
+  uint64_t ignoredTimeStamp;
+  if( !encoder_V2_->decodePointCloudDeltaFrame (i_cloud, out_cloud, *i_stream, *p_stream, ignoredTimeStamp)) return false;
   qualityMetric.decoding_time_ms = tt.toc ();
   return true;
 }

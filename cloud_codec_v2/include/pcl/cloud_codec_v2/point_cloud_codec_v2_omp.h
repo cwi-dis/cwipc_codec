@@ -149,8 +149,7 @@ namespace pcl{
         using pcl::io:: OctreePointCloudCodecV2<PointT, LeafT, BranchT, OctreeT>::octree_resolution_;
         using pcl::io:: OctreePointCloudCodecV2<PointT, LeafT, BranchT, OctreeT>::color_bit_resolution_;
         using pcl::io:: OctreePointCloudCodecV2<PointT, LeafT, BranchT, OctreeT>::color_coding_type_;
-		using pcl::io::OctreePointCloudCodecV2<PointT, LeafT, BranchT, OctreeT>::_deprecatedTimeStamp;
-        using pcl::io:: OctreePointCloudCodecV2<PointT, LeafT, BranchT, OctreeT>::do_voxel_centroid_enDecoding_;
+		using pcl::io:: OctreePointCloudCodecV2<PointT, LeafT, BranchT, OctreeT>::do_voxel_centroid_enDecoding_;
         using pcl::io:: OctreePointCloudCodecV2<PointT, LeafT, BranchT, OctreeT>::shared_macroblock_percentage_;
         using pcl::io:: OctreePointCloudCodecV2<PointT, LeafT, BranchT, OctreeT>::shared_macroblock_convergence_percentage_;
         using pcl::io:: OctreePointCloudCodecV2<PointT, LeafT, BranchT, OctreeT>::simplifyPCloud;
