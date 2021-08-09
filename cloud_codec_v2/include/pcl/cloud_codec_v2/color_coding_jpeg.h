@@ -44,6 +44,7 @@ namespace pcl{
 
   namespace octree{
 
+  using std::uint32_t;
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /** \brief @b Octree Color Coding Based on the legacy JPEG coding via libJPEGTurbo

@@ -45,6 +45,7 @@ namespace pcl{
 
   namespace io
   {
+  using std::int16_t;
      /** \brief @b Rigid Transofrm Coding class
     * \note This class encodes a rigid transform in 12 or 14 bytes (6 or 7 shorts)
     * \author Rufael Mekuria rufael.mekuria@cwi.nl

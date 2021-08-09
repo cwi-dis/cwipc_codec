@@ -50,7 +50,8 @@
 namespace pcl{
   
   namespace io{
-  
+  using std::uint8_t;
+
     /** \brief Class for writing jpeg buffers and files */
     class PCL_EXPORTS JPEGWriter
     {
