@@ -133,7 +133,7 @@ namespace pcl{
           doColorEncoding_arg,
           colorBitResolution_arg), 
           color_coding_type_(colorCodingType_arg), 
-          timeStamp(timeStamp_arg),
+          _deprecatedTimeStamp(timeStamp_arg),
           octreeResolution(octreeResolution_arg),
           colorBitResolution(colorBitResolution_arg),
           jpeg_quality(jpeg_quality_arg),
@@ -291,7 +291,7 @@ namespace pcl{
 
         uint32_t color_coding_type_; //! color coding with jpeg, graph transform, or differential encodings
     public:
-		uint64_t timeStamp;
+		uint64_t _deprecatedTimeStamp;
 		double  octreeResolution;
 		unsigned char colorBitResolution;
 		int jpeg_quality;

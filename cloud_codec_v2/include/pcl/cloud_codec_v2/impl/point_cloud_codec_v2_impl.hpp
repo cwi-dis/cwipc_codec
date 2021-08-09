@@ -254,7 +254,7 @@ namespace pcl{
 
       // read header from input stream
       readFrameHeader (compressed_tree_data_in_arg);
-	  tmstmp = timeStamp;
+	  tmstmp = _deprecatedTimeStamp;
 	  //TO DO Shishir: Set codec parameteres from frame header before decoding
 	  //
 	  //this->octree_resolution_ = octreeResolution;
@@ -766,7 +766,7 @@ namespace pcl{
         true,
         color_bit_resolution_,
         color_coding_type_, 
-			timeStamp,
+			_deprecatedTimeStamp,
         do_voxel_centroid_enDecoding_
         );
 
@@ -1108,7 +1108,7 @@ namespace pcl{
 				true,
 				color_bit_resolution_,
 				color_coding_type_,
-				timeStamp,
+				_deprecatedTimeStamp,
 				do_voxel_centroid_enDecoding_
 				);
 		intra_coder.defineBoundingBox(0.0, 0.0, 0.0, 1.0, 1.0, 1.0);
@@ -1232,7 +1232,7 @@ namespace pcl{
         true,
         color_bit_resolution_,
         color_coding_type_,
-			timeStamp,
+			_deprecatedTimeStamp,
         do_voxel_centroid_enDecoding_
         );
 	  uint64_t t = 0;
@@ -1497,7 +1497,7 @@ namespace pcl{
 
       //! write additional fields for cloud codec v2
 	  //std::cout << "\n Input time stamp is: " << timeStamp << "\n";
-	  compressed_tree_data_out_arg.write(reinterpret_cast<const char*> (&timeStamp), sizeof(timeStamp));
+	  compressed_tree_data_out_arg.write(reinterpret_cast<const char*> (&_deprecatedTimeStamp), sizeof(_deprecatedTimeStamp));
 	  compressed_tree_data_out_arg.write(reinterpret_cast<const char*> (&octreeResolution), sizeof(octreeResolution));
 	  compressed_tree_data_out_arg.write(reinterpret_cast<const char*> (&colorBitResolution), sizeof(colorBitResolution));
 	  compressed_tree_data_out_arg.write(reinterpret_cast<const char*> (&jpeg_quality), sizeof(jpeg_quality));
@@ -1517,7 +1517,7 @@ namespace pcl{
       OctreePointCloudCompression<PointT>::readFrameHeader(compressed_tree_data_in_arg);
 
       //! read additional fields for cloud codec v2
-	  compressed_tree_data_in_arg.read(reinterpret_cast<char*> (&timeStamp), sizeof(timeStamp));
+	  compressed_tree_data_in_arg.read(reinterpret_cast<char*> (&_deprecatedTimeStamp), sizeof(_deprecatedTimeStamp));
 	  compressed_tree_data_in_arg.read(reinterpret_cast<char*> (&octreeResolution), sizeof(octreeResolution));
 	  compressed_tree_data_in_arg.read(reinterpret_cast<char*> (&colorBitResolution), sizeof(colorBitResolution));
 	  compressed_tree_data_in_arg.read(reinterpret_cast<char*> (&jpeg_quality), sizeof(jpeg_quality));
