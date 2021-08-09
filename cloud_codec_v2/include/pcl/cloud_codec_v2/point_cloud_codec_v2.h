@@ -51,6 +51,11 @@
 #include <pcl/cloud_codec_v2/point_coding_v2.h>
 #include <pcl/cloud_codec_v2/color_coding_jpeg.h>
 
+#if defined(__clang_major__) && __clang_major__ <= 11
+// Older clang releases have trouble with deleted virtual functions
+#define workaround_no_deleted_virtual_functions
+#endif
+
 namespace pcl{
 
   namespace io{
@@ -177,32 +182,42 @@ namespace pcl{
           transformationepsilon_ = tfeps;
         }
 
+#ifndef workaround_no_deleted_virtual_functions
         void
             encodePointCloud(const PointCloudConstPtr& cloud_arg, std::ostream& compressed_tree_data_out_arg) = delete;
+#endif
         void
             encodePointCloud(const PointCloudConstPtr& cloud_arg, std::ostream& compressed_tree_data_out_arg, uint64_t timeStamp);
 
+#ifndef workaround_no_deleted_virtual_functions
         bool
             decodePointCloud(std::istream& compressed_tree_data_in_arg, PointCloudPtr& cloud_arg) = delete;
+#endif
         bool
             decodePointCloud(std::istream& compressed_tree_data_in_arg, PointCloudPtr& cloud_arg, uint64_t& timeStamp);
 
+#ifndef workaround_no_deleted_virtual_functions
         void generatePointCloudDeltaFrame(const PointCloudConstPtr& icloud_arg, const PointCloudConstPtr& pcloud_arg, PointCloudPtr& out_cloud_arg,
                 std::ostream& i_coded_data, std::ostream& p_coded_data, bool icp_on_original, bool write_out_cloud) = delete;
+#endif
         virtual void
             generatePointCloudDeltaFrame(const PointCloudConstPtr& icloud_arg, const PointCloudConstPtr& pcloud_arg, PointCloudPtr& out_cloud_arg,
                 std::ostream& i_coded_data, std::ostream& p_coded_data, bool icp_on_original, bool write_out_cloud, uint64_t timeStamp);
 
+#ifndef workaround_no_deleted_virtual_functions
         virtual void
             encodePointCloudDeltaFrame(const PointCloudConstPtr& icloud_arg, const PointCloudConstPtr& pcloud_arg, PointCloudPtr& out_cloud_arg,
                 std::ostream& i_coded_data, std::ostream& p_coded_data, bool icp_on_original, bool write_out_cloud) = delete;
+#endif
         virtual void
             encodePointCloudDeltaFrame(const PointCloudConstPtr& icloud_arg, const PointCloudConstPtr& pcloud_arg, PointCloudPtr& out_cloud_arg,
                 std::ostream& i_coded_data, std::ostream& p_coded_data, bool icp_on_original, bool write_out_cloud, uint64_t timeStamp);
 
+#ifndef workaround_no_deleted_virtual_functions
         virtual bool
             decodePointCloudDeltaFrame(const PointCloudConstPtr& icloud_arg, PointCloudPtr& out_cloud_arg,
                 std::istream& i_coded_data, std::istream& p_coded_data) = delete;
+#endif
 
         virtual bool
             decodePointCloudDeltaFrame(const PointCloudConstPtr& icloud_arg, PointCloudPtr& out_cloud_arg,
@@ -274,11 +289,16 @@ namespace pcl{
 
         // protected functions overriding OctreePointCloudCompression
         
+#ifndef workaround_no_deleted_virtual_functions        
         void writeFrameHeader(std::ostream& compressed_tree_data_out_arg) = delete;
+#endif
         void
         writeFrameHeader(std::ostream& compressed_tree_data_out_arg, uint64_t timeStamp);
 
+#ifndef workaround_no_deleted_virtual_functions
         void readFrameHeader(std::istream& compressed_tree_data_in_arg) = delete;
+#endif
+
         void
         readFrameHeader(std::istream& compressed_tree_data_in_arg, uint64_t& timeStamp);
 
