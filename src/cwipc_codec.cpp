@@ -160,8 +160,8 @@ private:
                   true, // do color encoding
                   8, // color bits
                   1, // color coding type
-                  false,
-                  false, // not implemented
+                  false, // centroid computation - expensive with little added value
+                  false, // scalable bitstream - not implemented
                   false, // do_connectivity_coding_ not implemented
                   m_params.jpeg_quality,
                   num_threads
