@@ -7,7 +7,8 @@
 
 namespace pcl{
 
-  namespace octree{    
+  namespace octree{
+  using std::uint8_t;
      /**!
     \brief class for doing mapping of vector of rgb values into an image grid and back via a zigzag pattern
     \author Rufael Mekuria rufael.mekuria@cwi.nl

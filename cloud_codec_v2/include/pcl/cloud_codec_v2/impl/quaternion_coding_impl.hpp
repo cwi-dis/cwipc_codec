@@ -51,6 +51,7 @@ namespace pcl{
 
   namespace io
   {
+  using std::int16_t;
 
     bool QuaternionCoding::compressQuaternion(Eigen::Quaternion<float> &quat_in, int16_t *comp_dat)
     {
