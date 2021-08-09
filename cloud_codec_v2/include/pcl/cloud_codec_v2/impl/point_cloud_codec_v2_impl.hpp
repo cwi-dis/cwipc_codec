@@ -86,16 +86,27 @@ namespace pcl{
       unsigned char recent_tree_depth =
         static_cast<unsigned char> (getTreeDepth ());
 
+#ifdef xxxjack_removed_suspect_code
       // CWI addition to prevent crashes as in original cloud codec
       deleteCurrentBuffer();
       deleteTree();
+#endif
 
       // initialize octree
       setInputCloud (cloud_arg);
 
+#ifdef xxxjack_removed_suspect_code
       // CWI added, when encoding hte output variable stores the (simplified icloud)
       output_ = PointCloudPtr(new PointCloud());
-
+#else
+      // Added by Jack. We initialize the output_ pointcloud only if we want to do I and P frames
+      if (i_frame_rate_ > 1) {
+          output_ = PointCloudPtr(new PointCloud());
+      } else {
+          output_ = nullptr;
+      }
+#endif
+          
       // add point to octree
       addPointsFromInputCloud ();
 
@@ -178,6 +189,9 @@ namespace pcl{
         // apply entropy coding to the content of all data vectors and send data to output stream
         entropyEncoding(compressed_tree_data_out_arg, compressed_tree_data_out_arg);
 
+        // xxxjack Added this call again, which had been removed by Rufael.
+        switchBuffers();
+          
         // reset object count
         object_count_ = 0;
 
@@ -1611,8 +1625,10 @@ namespace pcl{
 
           centroid_coder_.encodePoint(lowerVoxelCorner, centroid);
         }
-        // store the simplified cloud so that it can be used for predictive encoding
-        output_->points.push_back(centroid);
+        // store the simplified cloud so that it can be used for predictive encoding (if wanted)
+        if (output_) {
+          output_->points.push_back(centroid);
+        }
       }
     }
 
