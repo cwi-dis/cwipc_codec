@@ -76,3 +76,4 @@ install(FILES ${PROJECT_SOURCE_DIR}/CMakeFiles/cwipc_codec-config.cmake
 install(EXPORT cwipc_codec 
 	DESTINATION lib/cmake/cwipc_codec)
 
+install(FILES $<TARGET_PDB_FILE:cwipc_codec> DESTINATION ${CMAKE_INSTALL_BINDIR} OPTIONAL)
