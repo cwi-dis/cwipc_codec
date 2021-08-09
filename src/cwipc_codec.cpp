@@ -62,7 +62,7 @@ public:
     	return m_result != NULL; 
     };
     
-    bool at_gop_boundary() { return m_encoder == NULL; };
+    bool at_gop_boundary() { return m_remaining_frames_in_gop <= 0; };
 
     void feed(cwipc *pc) {
         if (!m_alive) {
@@ -83,6 +83,8 @@ public:
 		// Allocate an encoder if none is available (we are at the beginning of a GOP)
 		if (m_encoder == NULL)
 			alloc_encoder();
+        bool start_new_gop = m_remaining_frames_in_gop <= 0;
+        m_remaining_frames_in_gop = m_params.do_inter_frame ? m_params.gop_size : 1;
 
         cwipc_pcl_pointcloud pcl_pc = pc->access_pcl_pointcloud();
         if (pcl_pc->size() == 0) {
@@ -101,12 +103,13 @@ public:
         }
 
         m_encoder->encodePointCloud(pcl_pc, comp_frame, pc->timestamp());
-
+        m_remaining_frames_in_gop--;
+#ifdef delete_encoder_at_end_of_gop
 		/* Free the encoder if we are at the end of the GOP */
-		if (--m_remaining_frames_in_gop <= 0) {
+		if (m_remaining_frames_in_gop <= 0) {
 			m_encoder = NULL;
 		}
-
+#endif
         /* Store the result */
         std::lock_guard<std::mutex> lock(m_result_mutex);
         if (m_result) {
