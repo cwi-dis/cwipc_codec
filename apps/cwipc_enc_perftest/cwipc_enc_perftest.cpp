@@ -41,6 +41,7 @@ int main(int argc, char** argv)
 	param.jpeg_quality = 0;
 	param.macroblock_size = 16;
 	param.tilenumber = 0;
+    param.voxelsize = 0;
 
 	char *errorString;
     cwipc_encodergroup *encodergroup = cwipc_new_encodergroup(&errorString, CWIPC_API_VERSION);
