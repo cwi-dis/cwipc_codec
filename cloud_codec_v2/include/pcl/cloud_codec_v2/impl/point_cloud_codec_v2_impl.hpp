@@ -89,6 +89,15 @@ namespace pcl{
 #ifdef xxxjack_removed_suspect_code
       // CWI addition to prevent crashes as in original cloud codec
       deleteCurrentBuffer();
+#endif
+#if 1
+      //
+      // xxxjack tried to remove this code: it isn't in the original
+      // octree_pointcloud_compression and removing it gives a significant
+      // performance update.
+      // However, removing it results in a crash on Windows, after encoding
+      // around 50 tiled pointclouds of the loot 150Kpoint set.
+      //
       deleteTree();
 #endif
 
@@ -221,7 +230,9 @@ namespace pcl{
       else
       {
         if (b_show_statistics_) PCL_INFO ("Info: Dropping empty point cloud\n");
+#ifdef xxxjack_removed_suspect_code
         deleteTree();
+#endif
         i_frame_counter_ = 0;
         i_frame_ = true;
       }
