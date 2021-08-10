@@ -35,7 +35,10 @@ public:
         m_remaining_frames_in_gop(0),
         m_alive(true),
         m_queue_tilefilter(1),
-        m_queue_encoder(1)
+        m_queue_encoder(1),
+        m_thread_tilefilter(nullptr),
+        m_thread_encoder(nullptr),
+        m_use_threads(false)
     {
 
 	}
@@ -43,17 +46,51 @@ public:
     ~cwipc_encoder_impl() {}
     
     void free() {
+        close();
         if (m_result) ::free(m_result);
         m_encoder = NULL;
         m_result = NULL;
         m_result_size = 0;
-        m_alive = false;
         m_result_cv.notify_all();
     };
     
     void close() {
         m_alive = false;
         m_result_cv.notify_all();
+        if (m_use_threads) {
+            m_queue_encoder.try_enqueue(nullptr);
+            m_queue_tilefilter.try_enqueue(nullptr);
+
+            m_thread_encoder->join();
+            m_thread_tilefilter->join();
+
+            delete m_thread_encoder;
+            delete m_thread_tilefilter;
+
+            m_thread_encoder = nullptr;
+            m_thread_tilefilter = nullptr;
+
+            m_use_threads = false;
+        }
+    }
+    
+    void enable_threads() {
+        if (m_use_threads) return;
+        m_use_threads = true;
+        m_thread_encoder = new std::thread([this] {
+            bool ok = true;
+            while(m_alive) {
+                if (!ok) std::cerr << "cwipc_encoder: threaded encoder failure" << std::endl;
+                ok = this->_run_single_encode();
+            }
+        });
+        m_thread_tilefilter = new std::thread([this] {
+            bool ok = true;
+            while(m_alive) {
+                if (!ok) std::cerr << "cwipc_encoder: threaded tilefilter failure" << std::endl;
+                this->_run_single_tilefilter();
+            }
+        });
     }
     
     bool eof() { return !m_alive; };
@@ -71,11 +108,22 @@ public:
             std::cerr << "cwipc_encoder: feed() after close()" << std::endl;
             return;
         }
-        m_queue_tilefilter.enqueue(pc);
-        bool ok = _run_single_tilefilter();
-        assert(ok);
-        ok = _run_single_encode();
-        assert(ok);
+        if (m_use_threads) {
+            cwipc *newpc = cwipc_from_pcl(pc->access_pcl_pointcloud(), pc->timestamp(), nullptr, CWIPC_API_VERSION);
+            pc = nullptr;
+            m_queue_tilefilter.enqueue(newpc);
+        } else {
+            bool ok;
+            ok = m_queue_tilefilter.try_enqueue(pc);
+            if (!ok) std::cerr << "cwipc_encoder: unthreaded try_enqueue failed" << std::endl;
+
+            ok = _run_single_tilefilter();
+            if (!ok) std::cerr << "cwipc_encoder: unthreaded tilefilter failure" << std::endl;
+
+            ok = _run_single_encode();
+            if (!ok) std::cerr << "cwipc_encoder: unthreaded encoder failure" << std::endl;
+
+        }
     };
     
     size_t get_encoded_size() { 
@@ -131,7 +179,7 @@ private:
             newpc = cwipc_tilefilter(pc, m_params.tilenumber);
             if (newpc == NULL) {
                 std::cerr << "cwipc_encoder: tilefilter failed" << std::endl;
-                return;
+                return false;
             }
         }
         else {
@@ -202,6 +250,9 @@ private:
     bool m_alive;
     moodycamel::BlockingReaderWriterQueue<cwipc *> m_queue_tilefilter;
     moodycamel::BlockingReaderWriterQueue<cwipc *> m_queue_encoder;
+    std::thread* m_thread_tilefilter;
+    std::thread* m_thread_encoder;
+    bool m_use_threads;
 };
 
 class cwipc_encodergroup_impl : public cwipc_encodergroup
@@ -238,19 +289,9 @@ public:
             newpc = cwipc_from_pcl(pc->access_pcl_pointcloud(), pc->timestamp(), nullptr, CWIPC_API_VERSION);
         }
         pc = nullptr; // Ensure we don't access this anymore.
-        if (m_encoders.size() == 1) {
-            m_encoders[0]->feed(newpc);
-        } else {
-            // Fire up threads for all decoders in parallel, and wait for all of them.
-            // Very simple to implement, may be good enough.
-            std::vector<std::thread*> threads;
-            for (auto enc : m_encoders) {
-                std::thread* thr = new std::thread([enc, newpc] { enc->feed(newpc); });
-                threads.push_back(thr);
-            }
-            for (std::thread* thr : threads) {
-                thr->join();
-            }
+        
+        for (auto enc : m_encoders) {
+            enc->feed(newpc);
         }
 		newpc->free();
 	};
@@ -263,7 +304,17 @@ public:
 		m_voxelsize = params->voxelsize;
 		cwipc_encoder_impl *newEncoder = (cwipc_encoder_impl *)cwipc_new_encoder(version, params, errorMessage, CWIPC_API_VERSION);
 		if (newEncoder == NULL) return NULL;
-		m_encoders.push_back(newEncoder);
+        //
+        // See if we should enable threading in the encoders.
+        // If there was only a single one earlier we should enable threading for it too.
+        //
+        if (m_encoders.size() == 1) {
+            m_encoders[0]->enable_threads();
+        }
+        if (m_encoders.size() > 0) {
+            newEncoder->enable_threads();
+        }
+        m_encoders.push_back(newEncoder);
 		return newEncoder;
 	};
 private:

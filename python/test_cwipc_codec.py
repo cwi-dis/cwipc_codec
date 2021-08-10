@@ -243,8 +243,8 @@ class TestApi(unittest.TestCase):
         enc_high = group.addencoder(octree_bits=9)
         enc_low = group.addencoder(octree_bits=5)
         group.feed(pc_orig)
-        self.assertTrue(enc_high.available(False))
-        self.assertTrue(enc_low.available(False))
+        self.assertTrue(enc_high.available(True))
+        self.assertTrue(enc_low.available(True))
 
         data_high = enc_high.get_bytes()
         data_low = enc_low.get_bytes()
