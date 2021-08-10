@@ -3,9 +3,14 @@
 #include <fstream>
 #include <chrono>
 #include <vector>
-
 #include "cwipc_codec/api.h"
 
+//
+// xxxjack note to self: Under XCode, the
+// default working directory is cwipc/build-xcode/bin/Debug
+// so ../../../cwipc_codec/tests/fixtures/input/loot_tiled.ply is
+// a decent path for testing.
+//
 #define COUNT 50
 
 std::vector<int> all_octree_bits { 6, 9 };
