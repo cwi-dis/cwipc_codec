@@ -42,6 +42,8 @@ add_library(cwipc_codec SHARED cwipc_codec.cpp cwipc_pcl_additions.cpp)
 
 target_sources(cwipc_codec
 	PRIVATE	"../include/cwipc_codec/api.h"
+	"readerwriterqueue.h"
+	"atomicops.h"
 )
 
 target_include_directories(cwipc_codec
