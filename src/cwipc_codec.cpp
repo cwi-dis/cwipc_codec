@@ -13,7 +13,7 @@
 
 #include "cwipc_util/api_pcl.h"
 #include "cwipc_codec/api.h"
-
+#include "readerwriterqueue.h"
 #include <pcl/point_cloud.h>
 #include <pcl/cloud_codec_v2/point_cloud_codec_v2.h>
 
@@ -33,7 +33,9 @@ public:
         m_result(NULL),
         m_result_size(0),
         m_remaining_frames_in_gop(0),
-        m_alive(true)
+        m_alive(true),
+        m_queue_tilefilter(1),
+        m_queue_encoder(1)
     {
 
 	}
@@ -69,62 +71,11 @@ public:
             std::cerr << "cwipc_encoder: feed() after close()" << std::endl;
             return;
         }
-    	cwipc *newpc = nullptr;
-    	// Apply tile filtering, if needed
-    	if (m_params.tilenumber) {
-    		newpc = cwipc_tilefilter(pc, m_params.tilenumber);
-    		if (newpc == NULL) {
-    			std::cerr << "cwipc_encoder: tilefilter failed" << std::endl;
-    			return;
-			}
-        }
-        else {
-            // Make shallow clone of pc
-            newpc = cwipc_from_pcl(pc->access_pcl_pointcloud(), pc->timestamp(), nullptr, CWIPC_API_VERSION);
-        }
-        pc = nullptr; // Ensure we don't access this anymore.
-        std::stringstream comp_frame;
-		// Allocate an encoder if none is available (we are at the beginning of a GOP)
-		if (m_encoder == NULL)
-			alloc_encoder();
-        bool start_new_gop = m_remaining_frames_in_gop <= 0;
-        m_remaining_frames_in_gop = m_params.do_inter_frame ? m_params.gop_size : 1;
-
-        cwipc_pcl_pointcloud pcl_pc = newpc->access_pcl_pointcloud();
-        if (pcl_pc->size() == 0) {
-        	// Special case: if the point cloud is empty we compress a point cloud with a single black point at 0,0,0
-        	pcl_pc = new_cwipc_pcl_pointcloud();
-        	cwipc_pcl_point dummyPoint;
-        	pcl_pc->push_back(dummyPoint);
-        }
-        // Note by Jack: this is a hack. If the point granularity of the pointcloud
-        // is larger (more coarse) than the octree_resolution in the encoder we adapt
-        // the encoder parameter, so a reasonable value is transmitted in the output
-        // file or packet.
-        float cellsize = newpc->cellsize();
-        if (cellsize > m_encoder->octreeResolution) {
-            m_encoder->octreeResolution = cellsize;
-        }
-        m_encoder->encodePointCloud(pcl_pc, comp_frame, newpc->timestamp());
-        m_remaining_frames_in_gop--;
-#ifdef delete_encoder_at_end_of_gop
-		/* Free the encoder if we are at the end of the GOP */
-		if (m_remaining_frames_in_gop <= 0) {
-			m_encoder = NULL;
-		}
-#endif
-        /* Store the result */
-        std::lock_guard<std::mutex> lock(m_result_mutex);
-        if (m_result) {
-            ::free(m_result);
-            m_result = NULL;
-            m_result_size = 0;
-        }
-        m_result_size = comp_frame.str().length();
-        m_result = (void *)malloc(m_result_size);
-        comp_frame.str().copy((char *)m_result, m_result_size);
-      	newpc->free();
-        m_result_cv.notify_one();
+        m_queue_tilefilter.enqueue(pc);
+        bool ok = _run_single_tilefilter();
+        assert(ok);
+        ok = _run_single_encode();
+        assert(ok);
     };
     
     size_t get_encoded_size() { 
@@ -169,7 +120,78 @@ private:
         m_encoder->setMacroblockSize(m_params.macroblock_size);
         m_remaining_frames_in_gop = m_params.gop_size;
 	}
+    
+    bool _run_single_tilefilter() {
+        cwipc *pc = nullptr;
+        m_queue_tilefilter.wait_dequeue(pc);
+        if (pc == nullptr) return false;
+        cwipc *newpc = nullptr;
+        // Apply tile filtering, if needed
+        if (m_params.tilenumber) {
+            newpc = cwipc_tilefilter(pc, m_params.tilenumber);
+            if (newpc == NULL) {
+                std::cerr << "cwipc_encoder: tilefilter failed" << std::endl;
+                return;
+            }
+        }
+        else {
+            // Make shallow clone of pc
+            newpc = cwipc_from_pcl(pc->access_pcl_pointcloud(), pc->timestamp(), nullptr, CWIPC_API_VERSION);
+        }
+        pc = nullptr; // Ensure we don't access this anymore.
+        m_queue_encoder.enqueue(newpc);
+        return true;
+    }
 	
+    bool _run_single_encode() {
+        cwipc *newpc = nullptr;
+        m_queue_encoder.wait_dequeue(newpc);
+        if (newpc == nullptr) return false;
+        std::stringstream comp_frame;
+        // Allocate an encoder if none is available (we are at the beginning of a GOP)
+        if (m_encoder == NULL)
+            alloc_encoder();
+        bool start_new_gop = m_remaining_frames_in_gop <= 0;
+        m_remaining_frames_in_gop = m_params.do_inter_frame ? m_params.gop_size : 1;
+
+        cwipc_pcl_pointcloud pcl_pc = newpc->access_pcl_pointcloud();
+        if (pcl_pc->size() == 0) {
+            // Special case: if the point cloud is empty we compress a point cloud with a single black point at 0,0,0
+            pcl_pc = new_cwipc_pcl_pointcloud();
+            cwipc_pcl_point dummyPoint;
+            pcl_pc->push_back(dummyPoint);
+        }
+        // Note by Jack: this is a hack. If the point granularity of the pointcloud
+        // is larger (more coarse) than the octree_resolution in the encoder we adapt
+        // the encoder parameter, so a reasonable value is transmitted in the output
+        // file or packet.
+        float cellsize = newpc->cellsize();
+        if (cellsize > m_encoder->octreeResolution) {
+            m_encoder->octreeResolution = cellsize;
+        }
+        m_encoder->encodePointCloud(pcl_pc, comp_frame, newpc->timestamp());
+        m_remaining_frames_in_gop--;
+#ifdef delete_encoder_at_end_of_gop
+        /* Free the encoder if we are at the end of the GOP */
+        if (m_remaining_frames_in_gop <= 0) {
+            m_encoder = NULL;
+        }
+#endif
+        /* Store the result */
+        std::lock_guard<std::mutex> lock(m_result_mutex);
+        if (m_result) {
+            ::free(m_result);
+            m_result = NULL;
+            m_result_size = 0;
+        }
+        m_result_size = comp_frame.str().length();
+        m_result = (void *)malloc(m_result_size);
+        comp_frame.str().copy((char *)m_result, m_result_size);
+        m_result_cv.notify_one();
+        newpc->free();
+        return true;
+    }
+    
 	pcl::shared_ptr<pcl::io::OctreePointCloudCodecV2<cwipc_pcl_point> > m_encoder;
     cwipc_encoder_params m_params;
     void *m_result;
@@ -178,6 +200,8 @@ private:
     std::condition_variable m_result_cv;
     int m_remaining_frames_in_gop;
     bool m_alive;
+    moodycamel::BlockingReaderWriterQueue<cwipc *> m_queue_tilefilter;
+    moodycamel::BlockingReaderWriterQueue<cwipc *> m_queue_encoder;
 };
 
 class cwipc_encodergroup_impl : public cwipc_encodergroup
