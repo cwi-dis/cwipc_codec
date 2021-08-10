@@ -69,7 +69,7 @@ public:
             std::cerr << "cwipc_encoder: feed() after close()" << std::endl;
             return;
         }
-    	cwipc *newpc = NULL;
+    	cwipc *newpc = nullptr;
     	// Apply tile filtering, if needed
     	if (m_params.tilenumber) {
     		newpc = cwipc_tilefilter(pc, m_params.tilenumber);
@@ -77,8 +77,12 @@ public:
     			std::cerr << "cwipc_encoder: tilefilter failed" << std::endl;
     			return;
 			}
-			pc = newpc;
-		}
+        }
+        else {
+            // Make shallow clone of pc
+            newpc = cwipc_from_pcl(pc->access_pcl_pointcloud(), pc->timestamp(), nullptr, CWIPC_API_VERSION);
+        }
+        pc = nullptr; // Ensure we don't access this anymore.
         std::stringstream comp_frame;
 		// Allocate an encoder if none is available (we are at the beginning of a GOP)
 		if (m_encoder == NULL)
@@ -86,7 +90,7 @@ public:
         bool start_new_gop = m_remaining_frames_in_gop <= 0;
         m_remaining_frames_in_gop = m_params.do_inter_frame ? m_params.gop_size : 1;
 
-        cwipc_pcl_pointcloud pcl_pc = pc->access_pcl_pointcloud();
+        cwipc_pcl_pointcloud pcl_pc = newpc->access_pcl_pointcloud();
         if (pcl_pc->size() == 0) {
         	// Special case: if the point cloud is empty we compress a point cloud with a single black point at 0,0,0
         	pcl_pc = new_cwipc_pcl_pointcloud();
@@ -97,12 +101,11 @@ public:
         // is larger (more coarse) than the octree_resolution in the encoder we adapt
         // the encoder parameter, so a reasonable value is transmitted in the output
         // file or packet.
-        float cellsize = pc->cellsize();
+        float cellsize = newpc->cellsize();
         if (cellsize > m_encoder->octreeResolution) {
             m_encoder->octreeResolution = cellsize;
         }
-
-        m_encoder->encodePointCloud(pcl_pc, comp_frame, pc->timestamp());
+        m_encoder->encodePointCloud(pcl_pc, comp_frame, newpc->timestamp());
         m_remaining_frames_in_gop--;
 #ifdef delete_encoder_at_end_of_gop
 		/* Free the encoder if we are at the end of the GOP */
@@ -120,10 +123,7 @@ public:
         m_result_size = comp_frame.str().length();
         m_result = (void *)malloc(m_result_size);
         comp_frame.str().copy((char *)m_result, m_result_size);
-        if (newpc) {
-        	// Free a temporary pointcloud we allocated
-        	newpc->free();
-		}
+      	newpc->free();
         m_result_cv.notify_one();
     };
     
@@ -203,32 +203,32 @@ public:
 
 	void feed(cwipc *pc) {
 		cwipc *newpc = NULL;
-		if (m_voxelsize > 0) {
-			newpc = cwipc_downsample(pc, m_voxelsize);
-			if (newpc == NULL) {
-				std::cerr << "cwipc_encodergroup: cwipc_downsample failed" << std::endl;
-				return;
-			}
-			pc = newpc;
-		}
+        if (m_voxelsize > 0) {
+            newpc = cwipc_downsample(pc, m_voxelsize);
+            if (newpc == NULL) {
+                std::cerr << "cwipc_encodergroup: cwipc_downsample failed" << std::endl;
+                return;
+            }
+        } else {
+            // Make shallow clone of pc
+            newpc = cwipc_from_pcl(pc->access_pcl_pointcloud(), pc->timestamp(), nullptr, CWIPC_API_VERSION);
+        }
+        pc = nullptr; // Ensure we don't access this anymore.
         if (m_encoders.size() == 1) {
-            m_encoders[0]->feed(pc);
+            m_encoders[0]->feed(newpc);
         } else {
             // Fire up threads for all decoders in parallel, and wait for all of them.
             // Very simple to implement, may be good enough.
             std::vector<std::thread*> threads;
             for (auto enc : m_encoders) {
-                std::thread* thr = new std::thread([enc, pc] { enc->feed(pc); });
+                std::thread* thr = new std::thread([enc, newpc] { enc->feed(newpc); });
                 threads.push_back(thr);
             }
             for (std::thread* thr : threads) {
                 thr->join();
             }
         }
-        if (newpc) {
-			// Free temporary pointcloud, if we allocated one
-			newpc->free();
-		}
+		newpc->free();
 	};
 
 	cwipc_encoder *addencoder(int version, cwipc_encoder_params* params, char **errorMessage) {
@@ -237,13 +237,13 @@ public:
 			return NULL;
 		}
 		m_voxelsize = params->voxelsize;
-		cwipc_encoder *newEncoder = cwipc_new_encoder(version, params, errorMessage, CWIPC_API_VERSION);
+		cwipc_encoder_impl *newEncoder = (cwipc_encoder_impl *)cwipc_new_encoder(version, params, errorMessage, CWIPC_API_VERSION);
 		if (newEncoder == NULL) return NULL;
 		m_encoders.push_back(newEncoder);
 		return newEncoder;
 	};
 private:
-	std::vector<cwipc_encoder *> m_encoders;
+	std::vector<cwipc_encoder_impl *> m_encoders;
 	float m_voxelsize;
 };
 
