@@ -38,7 +38,8 @@ public:
         m_queue_encoder(1),
         m_thread_tilefilter(nullptr),
         m_thread_encoder(nullptr),
-        m_use_threads(false)
+        m_use_threads(false),
+        m_queued_pc(nullptr)
     {
 
 	}
@@ -48,6 +49,8 @@ public:
     void free() {
         close();
         if (m_result) ::free(m_result);
+        if (m_queued_pc) m_queued_pc->free();
+        m_queued_pc = nullptr;
         m_encoder = NULL;
         m_result = NULL;
         m_result_size = 0;
@@ -109,9 +112,10 @@ public:
             return;
         }
         if (m_use_threads) {
-            cwipc *newpc = cwipc_from_pcl(pc->access_pcl_pointcloud(), pc->timestamp(), nullptr, CWIPC_API_VERSION);
+            if (m_queued_pc) m_queued_pc->free();
+            m_queued_pc = cwipc_from_pcl(pc->access_pcl_pointcloud(), pc->timestamp(), nullptr, CWIPC_API_VERSION);
             pc = nullptr;
-            m_queue_tilefilter.enqueue(newpc);
+            m_queue_tilefilter.enqueue(m_queued_pc);
         } else {
             bool ok;
             ok = m_queue_tilefilter.try_enqueue(pc);
@@ -253,6 +257,7 @@ private:
     std::thread* m_thread_tilefilter;
     std::thread* m_thread_encoder;
     bool m_use_threads;
+    cwipc *m_queued_pc;
 };
 
 class cwipc_encodergroup_impl : public cwipc_encodergroup
