@@ -5,11 +5,14 @@
 #include <sstream>
 #include <thread>
 #include <condition_variable>
+
 #ifdef WIN32
 #define _CWIPC_CODEC_EXPORT __declspec(dllexport)
 #else
 #define _CWIPC_CODEC_EXPORT
 #endif
+
+// #define SET_THREAD_NAME
 
 #include "cwipc_util/api_pcl.h"
 #include "cwipc_codec/api.h"
@@ -81,6 +84,10 @@ public:
         if (m_use_threads) return;
         m_use_threads = true;
         m_thread_encoder = new std::thread([this] {
+#ifdef SET_THREAD_NAME
+            std::string name = "pc-encoder tile=" + std::to_string(this->m_params.tilenumber) + " depth=" + std::to_string(this->m_params.octree_bits);
+            pthread_setname_np(name.c_str());
+#endif
             bool ok = true;
             while(m_alive) {
                 if (!ok) std::cerr << "cwipc_encoder: threaded encoder failure" << std::endl;
@@ -88,6 +95,10 @@ public:
             }
         });
         m_thread_tilefilter = new std::thread([this] {
+#ifdef SET_THREAD_NAME
+            std::string name = "pc-tilefilter tile=" + std::to_string(this->m_params.tilenumber) + " depth=" + std::to_string(this->m_params.octree_bits);
+            pthread_setname_np(name.c_str());
+#endif
             bool ok = true;
             while(m_alive) {
                 if (!ok) std::cerr << "cwipc_encoder: threaded tilefilter failure" << std::endl;
