@@ -62,9 +62,9 @@ set(SUBSYS_NAME cwi_pcl_codec)
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/;${CMAKE_MODULE_PATH}")
 set(QUIET_FLAG QUIET)
 
-# Use PCL 1.11 or later.
+# Use PCL 1.10-1.12 or later.
 #xxxjack find_package(PCL 1.11 REQUIRED COMPONENTS common geometry io filters sample_consensus segmentation kdtree features surface octree registration keypoints tracking search recognition)
-find_package(PCL 1.11 REQUIRED COMPONENTS common geometry io filters octree)
+find_package(PCL 1.10 REQUIRED COMPONENTS common geometry io filters octree)
 find_package(Boost 1.47.0 ${QUIET_FLAG} REQUIRED COMPONENTS system filesystem thread date_time iostreams chrono program_options)
 find_package(JPEG_Turbo ${QUIET_FLAG} REQUIRED)
 
