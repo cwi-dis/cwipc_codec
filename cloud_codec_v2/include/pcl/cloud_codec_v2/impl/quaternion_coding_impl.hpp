@@ -46,6 +46,8 @@
 #define QUATERNION_CODING_CCV2_HPP
 
 #include <pcl/cloud_codec_v2/quaternion_coding.h>
+#include <pcl/common/common.h>
+#include <float.h>
 
 namespace pcl{
 
