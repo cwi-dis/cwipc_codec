@@ -44,6 +44,9 @@ int main(int argc, char** argv)
     	std::cerr << argv[0] << ": Could not create encoder: " << errorString << std::endl;
     	return 1;
     }
+    if (pc->cellsize() == 0) {
+        pc->_set_cellsize(-1);
+    }
     encoder->feed(pc);
     pc->free();	// After feeding the pointcloud into the encoder we can free it.
     bool ok = encoder->available(true);
