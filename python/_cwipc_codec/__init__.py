@@ -27,7 +27,7 @@ def _cwipc_codec_dll(libname=None):
     if libname == None:
         libname = ctypes.util.find_library('cwipc_codec')
         if not libname:
-            raise RuntimeError('Dynamic library cwipc_util not found')
+            raise RuntimeError('Dynamic library cwipc_codec not found')
     assert libname
     _cwipc_codec_dll_reference = ctypes.CDLL(libname)
     
