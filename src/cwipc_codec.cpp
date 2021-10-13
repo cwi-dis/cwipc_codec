@@ -200,6 +200,7 @@ private:
         else {
             // Make shallow clone of pc
             newpc = cwipc_from_pcl(pc->access_pcl_pointcloud(), pc->timestamp(), nullptr, CWIPC_API_VERSION);
+            newpc->_set_cellsize(pc->cellsize());
         }
         pc = nullptr; // Ensure we don't access this anymore.
         m_queue_encoder.enqueue(newpc);
@@ -303,6 +304,7 @@ public:
         } else {
             // Make shallow clone of pc
             newpc = cwipc_from_pcl(pc->access_pcl_pointcloud(), pc->timestamp(), nullptr, CWIPC_API_VERSION);
+            newpc->_set_cellsize(pc->cellsize());
         }
         pc = nullptr; // Ensure we don't access this anymore.
         
