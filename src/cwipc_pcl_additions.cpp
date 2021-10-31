@@ -18,5 +18,19 @@ namespace io {
 template class OctreePointCloudCodecV2<cwipc_pcl_point>;
 }
 
+namespace octree {
+// This template declaration is needed for XCode build for profileing...
+template class OctreePointCloud<
+    cwipc_pcl_point,
+    pcl::octree::OctreeContainerPointIndices,
+    pcl::octree::OctreeContainerEmpty,
+    pcl::octree::Octree2BufBase<
+        pcl::octree::OctreeContainerPointIndices,
+        pcl::octree::OctreeContainerEmpty
+        >
+    >;
+}
+
 template class RadiusOutlierRemoval<cwipc_pcl_point>;
+
 }
