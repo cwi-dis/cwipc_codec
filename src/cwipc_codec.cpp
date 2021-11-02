@@ -21,6 +21,15 @@
 #include <pcl/cloud_codec_v2/point_cloud_codec_v2.h>
 
 // xxxjack using namespace std;
+//
+// Define the codec we want to use. Main options are probably using OctreeBase or Octree2BufBase.
+//
+typedef pcl::io::OctreePointCloudCodecV2<
+    cwipc_pcl_point,
+    OctreeContainerPointIndices,
+    OctreeContainerEmpty,
+    Octree2BufBase<OctreeContainerPointIndices, OctreeContainerEmpty>
+    > cwipc_pointcloud_codec;
 
 // Some parameters that will eventually be customizable again
 const int num_threads = 1;
@@ -163,8 +172,8 @@ private:
         double point_resolution = std::pow ( 2.0, -1.0 * m_params.octree_bits);
         double octree_resolution = std::pow ( 2.0, -1.0 * m_params.octree_bits);
         m_encoder = NULL;
-        m_encoder = pcl::shared_ptr<pcl::io::OctreePointCloudCodecV2<cwipc_pcl_point> > (
-            new pcl::io::OctreePointCloudCodecV2<cwipc_pcl_point> (
+        m_encoder = pcl::shared_ptr<cwipc_pointcloud_codec > (
+            new cwipc_pointcloud_codec (
                   pcl::io::MANUAL_CONFIGURATION,
                   false,
                   point_resolution,
@@ -256,7 +265,7 @@ private:
         return true;
     }
     
-	pcl::shared_ptr<pcl::io::OctreePointCloudCodecV2<cwipc_pcl_point> > m_encoder;
+	pcl::shared_ptr<cwipc_pointcloud_codec > m_encoder;
     cwipc_encoder_params m_params;
     void *m_result;
     size_t m_result_size;
@@ -382,9 +391,9 @@ public:
         //Convert buffer to stringstream for encoding
         std::string str((char *)buffer, bufferSize);
         std::stringstream istream(str);
-        pcl::shared_ptr<pcl::io::OctreePointCloudCodecV2<cwipc_pcl_point> > decoder_V2_;
-        decoder_V2_ = pcl::shared_ptr<pcl::io::OctreePointCloudCodecV2<cwipc_pcl_point> > (
-            new pcl::io::OctreePointCloudCodecV2<cwipc_pcl_point> (
+        pcl::shared_ptr<cwipc_pointcloud_codec > decoder_V2_;
+        decoder_V2_ = pcl::shared_ptr<cwipc_pointcloud_codec > (
+            new cwipc_pointcloud_codec (
                 pcl::io::MANUAL_CONFIGURATION,
                 false,
                 std::pow ( 2.0, -1.0 * par.octree_bits ),

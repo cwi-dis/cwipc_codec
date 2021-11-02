@@ -189,12 +189,16 @@ namespace pcl{
         if (i_frame_)
         {
           // i-frame encoding - encode tree structure without referencing previous buffer
-          serializeTree (binary_tree_data_vector_, false);
+          serializeTree (binary_tree_data_vector_);
         }
         else
         {
+#ifdef CWIPC_CODEC_WITHOUT_2BUF
+          abort();
+#else
           // p-frame encoding - XOR encoded tree structure
           serializeTree (binary_tree_data_vector_, true);
+#endif
         }
 
         // write frame header information to stream
@@ -203,8 +207,9 @@ namespace pcl{
         // apply entropy coding to the content of all data vectors and send data to output stream
         entropyEncoding(compressed_tree_data_out_arg, compressed_tree_data_out_arg);
 
-        // xxxjack Added this call again, which had been removed by Rufael.
+#ifndef CWIPC_CODEC_WITHOUT_2BUF
         switchBuffers();
+#endif
           
         // reset object count
         object_count_ = 0;
@@ -262,11 +267,13 @@ namespace pcl{
       // synchronize to frame header
       if (!syncToHeader(compressed_tree_data_in_arg)) return false;
 	  //std::cout << "\n Header synced \n";
+#if 0
       // initialize octree
       switchBuffers ();
 
       // added to prevent crashes as happens with original cloud codec
       deleteCurrentBuffer();
+#endif
       deleteTree();
       setOutputCloud (cloud_arg);
 	  //std::cout << " \n Octree buffers switched \n";
@@ -311,13 +318,17 @@ namespace pcl{
       output_->points.clear ();
       output_->points.reserve (static_cast<std::size_t> (point_count_));
 	  //std::cout << "\n Starting to deserialize \n";
-      if (i_frame_)
+      if (i_frame_) {
         // i-frame decoding - decode tree structure without referencing previous buffer
-        deserializeTree (binary_tree_data_vector_, false);
-      else
+        deserializeTree (binary_tree_data_vector_);
+      } else {
+#ifdef CWIPC_CODEC_WITHOUT_2BUF
+        abort();
+#else
         // p-frame decoding - decode XOR encoded tree structure
         deserializeTree (binary_tree_data_vector_, true);
-
+#endif
+      }
       // assign point cloud properties
       output_->height = 1;
       output_->width = static_cast<uint32_t> (cloud_arg->points.size ());
@@ -1554,7 +1565,7 @@ namespace pcl{
       OctreePointCloudCodecV2<PointT, LeafT, BranchT, OctreeT>::readFrameHeader(std::istream& compressed_tree_data_in_arg, uint64_t& timeStamp)
     {
       //! use the base class and read some extended information on codecV2
-      OctreePointCloudCompression<PointT>::readFrameHeader(compressed_tree_data_in_arg);
+      _Base::readFrameHeader(compressed_tree_data_in_arg);
 
       //! read additional fields for cloud codec v2
 	  compressed_tree_data_in_arg.read(reinterpret_cast<char*> (&timeStamp), sizeof(timeStamp));
@@ -1746,7 +1757,7 @@ namespace pcl{
       }
 	  //std::cout << " \n Left loop\n";
       //! read the original octree header
-      OctreePointCloudCompression<PointT>::syncToHeader (compressed_tree_data_in_arg);
+      _Base::syncToHeader (compressed_tree_data_in_arg);
       return true;
     };
 

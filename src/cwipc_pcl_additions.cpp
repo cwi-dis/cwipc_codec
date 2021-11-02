@@ -12,10 +12,21 @@
 #include "cwipc_util/api_pcl.h"
 #include "cwipc_util/api.h"
 
+#ifdef CWIPC_CODEC_WITHOUT_2BUF
+typedef pcl::octree::OctreeBase<pcl::octree::OctreeContainerPointIndices,pcl::octree::OctreeContainerEmpty> OctreeT;
+#else
+typedef pcl::octree::Octree2BufBase<pcl::octree::OctreeContainerPointIndices,pcl::octree::OctreeContainerEmpty> OctreeT;
+#endif
+
 namespace pcl {
 
 namespace io {
-template class OctreePointCloudCodecV2<cwipc_pcl_point>;
+template class OctreePointCloudCodecV2<
+    cwipc_pcl_point,
+    pcl::octree::OctreeContainerPointIndices,
+    pcl::octree::OctreeContainerEmpty,
+    OctreeT
+    >;
 }
 
 namespace octree {
@@ -24,10 +35,7 @@ template class OctreePointCloud<
     cwipc_pcl_point,
     pcl::octree::OctreeContainerPointIndices,
     pcl::octree::OctreeContainerEmpty,
-    pcl::octree::Octree2BufBase<
-        pcl::octree::OctreeContainerPointIndices,
-        pcl::octree::OctreeContainerEmpty
-        >
+    OctreeT
     >;
 }
 

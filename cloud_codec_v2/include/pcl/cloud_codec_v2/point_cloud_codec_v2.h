@@ -57,7 +57,7 @@
 #endif
 
 namespace pcl{
-
+  
   namespace io{
   using std::uint64_t;
   using std::uint32_t;
@@ -80,22 +80,16 @@ namespace pcl{
     class OctreePointCloudCodecV2 : public OctreePointCloudCompression<PointT,LeafT,BranchT,OctreeT>
     {
       public:
-
+        typedef  OctreePointCloudCompression<PointT,LeafT,BranchT,OctreeT> _Base;
         // public typedefs, copied from original implementation by Julius Kammerl
-       typedef typename OctreePointCloudCodecV2<PointT, LeafT, BranchT, OctreeT>::PointCloud PointCloud;
-       typedef typename OctreePointCloudCodecV2<PointT, LeafT, BranchT, OctreeT>::PointCloudPtr PointCloudPtr;
-       typedef typename OctreePointCloudCodecV2<PointT, LeafT, BranchT, OctreeT>::PointCloudConstPtr PointCloudConstPtr;
-       typedef OctreePointCloudCompression<PointT,LeafT,BranchT,OctreeT> MacroBlockTree;
-
-        // Boost shared pointers
-        typedef pcl::shared_ptr<OctreePointCloudCodecV2<PointT, LeafT, BranchT, OctreeT> > Ptr;
-        typedef pcl::shared_ptr<const OctreePointCloudCodecV2<PointT, LeafT, BranchT, OctreeT> > ConstPtr;
+        typedef typename _Base::PointCloud PointCloud;
+        typedef typename _Base::PointCloudPtr PointCloudPtr;
+        typedef typename _Base::PointCloudConstPtr PointCloudConstPtr;
+        typedef _Base MacroBlockTree;
 
         typedef typename OctreeT::LeafNode LeafNode;
         typedef typename OctreeT::BranchNode BranchNode;
 
-        typedef OctreePointCloudCodecV2<PointT, LeafT, BranchT, Octree2BufBase<LeafT, BranchT> > RealTimeStreamCompression;
-        typedef OctreePointCloudCodecV2<PointT, LeafT, BranchT, OctreeBase<LeafT, BranchT> > SinglePointCloudCompressionLowMemory;
 
         /** \brief Constructor
         * \param compressionProfile_arg:  define compression profile
@@ -126,7 +120,7 @@ namespace pcl{
           bool codeConnectivity_arg = false,
           int jpeg_quality_arg = 75,
           int num_threads=0) :
-        OctreePointCloudCompression<PointT,LeafT,BranchT,OctreeT>(
+        _Base(
           compressionProfile_arg,
           showStatistics_arg,
           pointResolution_arg,
@@ -364,11 +358,13 @@ namespace pcl{
         int num_threads_;
 
         // inherited protected members needed
-        using pcl::octree::Octree2BufBase<LeafT, BranchT>::deleteCurrentBuffer;
-        using pcl::octree::Octree2BufBase<LeafT, BranchT>::deserializeTree; // does not work in windows
-        using pcl::octree::Octree2BufBase<LeafT, BranchT>::leaf_count_;
-        using pcl::octree::Octree2BufBase<LeafT, BranchT>::serializeTree;
-        using pcl::octree::Octree2BufBase<LeafT, BranchT>::switchBuffers;
+        using OctreeT::deserializeTree; // does not work in windows
+        using OctreeT::leaf_count_;
+        using OctreeT::serializeTree;
+#ifndef CWIPC_CODEC_WITHOUT_2BUF
+        using OctreeT::switchBuffers;
+        using OctreeT::deleteCurrentBuffer;
+#endif
         using pcl::octree::OctreePointCloud<PointT, LeafT, BranchT, OctreeT>::addPointsFromInputCloud;
 //        using pcl::octree::OctreePointCloud<PointT, LeafT, BranchT, OctreeT>::deleteCurrentBuffer;
         using pcl::octree::OctreePointCloud<PointT, LeafT, BranchT, OctreeT>::deleteTree;
