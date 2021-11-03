@@ -44,6 +44,7 @@ target_sources(cwipc_codec
 	PRIVATE	"../include/cwipc_codec/api.h"
 	"readerwriterqueue.h"
 	"atomicops.h"
+	"cwipc_codec_config.h"
 )
 
 target_include_directories(cwipc_codec

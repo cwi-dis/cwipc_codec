@@ -14,21 +14,27 @@
 
 // #define SET_THREAD_NAME
 
+#include "cwipc_codec_config.h"
 #include "cwipc_util/api_pcl.h"
 #include "cwipc_codec/api.h"
 #include "readerwriterqueue.h"
 #include <pcl/point_cloud.h>
 #include <pcl/cloud_codec_v2/point_cloud_codec_v2.h>
 
-// xxxjack using namespace std;
 //
 // Define the codec we want to use. Main options are probably using OctreeBase or Octree2BufBase.
 //
+#ifdef CWIPC_CODEC_WITHOUT_2BUF
+typedef pcl::octree::OctreeBase<pcl::octree::OctreeContainerPointIndices,pcl::octree::OctreeContainerEmpty> cwipc_octree_type;
+#else
+typedef pcl::octree::Octree2BufBase<pcl::octree::OctreeContainerPointIndices,pcl::octree::OctreeContainerEmpty> cwipc_octree_type;
+#endif
+
 typedef pcl::io::OctreePointCloudCodecV2<
     cwipc_pcl_point,
     OctreeContainerPointIndices,
     OctreeContainerEmpty,
-    Octree2BufBase<OctreeContainerPointIndices, OctreeContainerEmpty>
+    cwipc_octree_type
     > cwipc_pointcloud_codec;
 
 // Some parameters that will eventually be customizable again
