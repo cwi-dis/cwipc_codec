@@ -18,16 +18,6 @@
 // Defining this leads to a 50% performance increase, but breaks P coding.
 #define CWIPC_CODEC_WITHOUT_2BUF
 
-//
-// Memory allocator that allocates blocks that can be transferred to csharp.
-//
-
-#ifdef WIN32
-#define CSHARP_COMPAT_ALLOC(nbytes) GlobalAlloc(GPTR, (nbytes))
-#else
-#define CSHARP_COMPAT_ALLOC(nbytes) malloc(nbytes)
-#endif
-
 /** \brief Pointcloud encoder settings.
  *
  * Various parameters governing encoder quality and performance settings.
