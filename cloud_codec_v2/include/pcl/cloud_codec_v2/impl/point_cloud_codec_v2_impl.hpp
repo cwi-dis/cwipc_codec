@@ -1560,7 +1560,7 @@ namespace pcl{
       OctreePointCloudCodecV2<PointT, LeafT, BranchT, OctreeT>::readFrameHeader(std::istream& compressed_tree_data_in_arg, uint64_t& timeStamp)
     {
       //! use the base class and read some extended information on codecV2
-      _Base::readFrameHeader(compressed_tree_data_in_arg);
+      _BaseCodecT::readFrameHeader(compressed_tree_data_in_arg);
 
       //! read additional fields for cloud codec v2
 	  compressed_tree_data_in_arg.read(reinterpret_cast<char*> (&timeStamp), sizeof(timeStamp));
@@ -1752,7 +1752,7 @@ namespace pcl{
       }
 	  //std::cout << " \n Left loop\n";
       //! read the original octree header
-      _Base::syncToHeader (compressed_tree_data_in_arg);
+      _BaseCodecT::syncToHeader (compressed_tree_data_in_arg);
       return true;
     };
 

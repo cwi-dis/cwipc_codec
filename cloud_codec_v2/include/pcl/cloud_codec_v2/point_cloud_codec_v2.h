@@ -79,13 +79,15 @@ namespace pcl{
       typename OctreeT = Octree2BufBase<LeafT, BranchT> >
     class OctreePointCloudCodecV2 : public OctreePointCloudCompression<PointT,LeafT,BranchT,OctreeT>
     {
+		// Important basetype names that we need in a lot of places.
+		typedef OctreePointCloudCompression<PointT,LeafT,BranchT,OctreeT> _BaseCodecT;
+		typedef OctreePointCloud<PointT, LeafT, BranchT, OctreeT> _PointCloudT;
       public:
-        typedef  OctreePointCloudCompression<PointT,LeafT,BranchT,OctreeT> _Base;
         // public typedefs, copied from original implementation by Julius Kammerl
-        typedef typename _Base::PointCloud PointCloud;
-        typedef typename _Base::PointCloudPtr PointCloudPtr;
-        typedef typename _Base::PointCloudConstPtr PointCloudConstPtr;
-        typedef _Base MacroBlockTree;
+        typedef typename _BaseCodecT::PointCloud PointCloud;
+        typedef typename _BaseCodecT::PointCloudPtr PointCloudPtr;
+        typedef typename _BaseCodecT::PointCloudConstPtr PointCloudConstPtr;
+        typedef _BaseCodecT MacroBlockTree;
 
         typedef typename OctreeT::LeafNode LeafNode;
         typedef typename OctreeT::BranchNode BranchNode;
@@ -120,7 +122,7 @@ namespace pcl{
           bool codeConnectivity_arg = false,
           int jpeg_quality_arg = 75,
           int num_threads=0) :
-        _Base(
+        _BaseCodecT(
           compressionProfile_arg,
           showStatistics_arg,
           pointResolution_arg,
@@ -365,47 +367,43 @@ namespace pcl{
         using OctreeT::switchBuffers;
         using OctreeT::deleteCurrentBuffer;
 #endif
-        using pcl::octree::OctreePointCloud<PointT, LeafT, BranchT, OctreeT>::addPointsFromInputCloud;
-//        using pcl::octree::OctreePointCloud<PointT, LeafT, BranchT, OctreeT>::deleteCurrentBuffer;
-        using pcl::octree::OctreePointCloud<PointT, LeafT, BranchT, OctreeT>::deleteTree;
-        using pcl::octree::OctreePointCloud<PointT, LeafT, BranchT, OctreeT>::getTreeDepth;
-        using pcl::octree::OctreePointCloud<PointT, LeafT, BranchT, OctreeT>::input_;
-        using pcl::octree::OctreePointCloud<PointT, LeafT, BranchT, OctreeT>::min_x_;
-        using pcl::octree::OctreePointCloud<PointT, LeafT, BranchT, OctreeT>::min_y_;
-        using pcl::octree::OctreePointCloud<PointT, LeafT, BranchT, OctreeT>::min_z_;
-        using pcl::octree::OctreePointCloud<PointT, LeafT, BranchT, OctreeT>::resolution_;
-        using pcl::octree::OctreePointCloud<PointT, LeafT, BranchT, OctreeT>::setInputCloud;
-        using pcl::io::OctreePointCloudCompression<PointT, LeafT, BranchT, OctreeT>::b_show_statistics_;
-        using pcl::io::OctreePointCloudCompression<PointT, LeafT, BranchT, OctreeT>::binary_tree_data_vector_;
-        using pcl::io::OctreePointCloudCompression<PointT, LeafT, BranchT, OctreeT>::cloud_with_color_;
-        using pcl::io::OctreePointCloudCompression<PointT, LeafT, BranchT, OctreeT>::color_bit_resolution_ ;
-        using pcl::io::OctreePointCloudCompression<PointT, LeafT, BranchT, OctreeT>::compressed_color_data_len_;
-        using pcl::io::OctreePointCloudCompression<PointT, LeafT, BranchT, OctreeT>::compressed_point_data_len_;
-        using pcl::io::OctreePointCloudCompression<PointT, LeafT, BranchT, OctreeT>::color_coder_;
-        using pcl::io::OctreePointCloudCompression<PointT, LeafT, BranchT, OctreeT>::data_with_color_;
-        using pcl::io::OctreePointCloudCompression<PointT, LeafT, BranchT, OctreeT>::do_color_encoding_;
-        using pcl::io::OctreePointCloudCompression<PointT, LeafT, BranchT, OctreeT>::do_voxel_grid_enDecoding_;
-        using pcl::io::OctreePointCloudCompression<PointT, LeafT, BranchT, OctreeT>::entropy_coder_;
-        using pcl::io::OctreePointCloudCompression<PointT, LeafT, BranchT, OctreeT>::frame_ID_;
-        using pcl::io::OctreePointCloudCompression<PointT, LeafT, BranchT, OctreeT>::i_frame_;
-        using pcl::io::OctreePointCloudCompression<PointT, LeafT, BranchT, OctreeT>::i_frame_counter_;
-        using pcl::io::OctreePointCloudCompression<PointT, LeafT, BranchT, OctreeT>::i_frame_rate_;
-        using pcl::io::OctreePointCloudCompression<PointT, LeafT, BranchT, OctreeT>::object_count_;
-        using pcl::io::OctreePointCloudCompression<PointT, LeafT, BranchT, OctreeT>::octree_resolution_;
-        using pcl::io::OctreePointCloudCompression<PointT, LeafT, BranchT, OctreeT>::output_;
-        using pcl::io::OctreePointCloudCompression<PointT, LeafT, BranchT, OctreeT>::point_coder_;
-        using pcl::io::OctreePointCloudCompression<PointT, LeafT, BranchT, OctreeT>::point_color_offset_;
-        using pcl::io::OctreePointCloudCompression<PointT, LeafT, BranchT, OctreeT>::point_count_;
-        using pcl::io::OctreePointCloudCompression<PointT, LeafT, BranchT, OctreeT>::point_count_data_vector_;
-        using pcl::io::OctreePointCloudCompression<PointT, LeafT, BranchT, OctreeT>::point_count_data_vector_iterator_;
-        using pcl::io::OctreePointCloudCompression<PointT, LeafT, BranchT, OctreeT>::point_resolution_;
-        using pcl::io::OctreePointCloudCompression<PointT, LeafT, BranchT, OctreeT>::setOutputCloud;
-        using pcl::io::OctreePointCloudCompression<PointT, LeafT, BranchT, OctreeT>::writeFrameHeader;
+        using _PointCloudT::addPointsFromInputCloud;
+//        using _PointCloudT::deleteCurrentBuffer;
+        using _PointCloudT::deleteTree;
+        using _PointCloudT::getTreeDepth;
+        using _PointCloudT::input_;
+        using _PointCloudT::min_x_;
+        using _PointCloudT::min_y_;
+        using _PointCloudT::min_z_;
+        using _PointCloudT::resolution_;
+        using _PointCloudT::setInputCloud;
+        using _BaseCodecT::b_show_statistics_;
+        using _BaseCodecT::binary_tree_data_vector_;
+        using _BaseCodecT::cloud_with_color_;
+        using _BaseCodecT::color_bit_resolution_ ;
+        using _BaseCodecT::compressed_color_data_len_;
+        using _BaseCodecT::compressed_point_data_len_;
+        using _BaseCodecT::color_coder_;
+        using _BaseCodecT::data_with_color_;
+        using _BaseCodecT::do_color_encoding_;
+        using _BaseCodecT::do_voxel_grid_enDecoding_;
+        using _BaseCodecT::entropy_coder_;
+        using _BaseCodecT::frame_ID_;
+        using _BaseCodecT::i_frame_;
+        using _BaseCodecT::i_frame_counter_;
+        using _BaseCodecT::i_frame_rate_;
+        using _BaseCodecT::object_count_;
+        using _BaseCodecT::octree_resolution_;
+        using _BaseCodecT::output_;
+        using _BaseCodecT::point_coder_;
+        using _BaseCodecT::point_color_offset_;
+        using _BaseCodecT::point_count_;
+        using _BaseCodecT::point_count_data_vector_;
+        using _BaseCodecT::point_count_data_vector_iterator_;
+        using _BaseCodecT::point_resolution_;
+        using _BaseCodecT::setOutputCloud;
+        using _BaseCodecT::writeFrameHeader;
  
-//      using pcl::io::OctreePointCloudCompression<PointT, LeafT, BranchT, OctreeT>::jp_color_coder_;
-//      using pcl::io::OctreePointCloudCompression<PointT, LeafT, BranchT, OctreeT>::i_frame_counter_;
-//      using pcl::io::OctreePointCloudCompression<PointT, LeafT, BranchT, OctreeT>::
-//      using pcl::octree::OctreePointCloud<PointT, LeafT, BranchT, OctreeT>::
     };
     // define frame identifier for cloud codec v2
     template<typename PointT, typename LeafT, typename BranchT, typename OctreeT>
