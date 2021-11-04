@@ -40,11 +40,6 @@
 // see: http://eigen.tuxfamily.org/dox-devel/group__TopicStlContainers.html
 #include <Eigen/StdVector>
 
-// #define DELETE_BUFFER_IN_ENCODER
-#ifdef WIN32
-#define DELETE_TREE_IN_ENCODER
-#endif
-
 // point cloud compression from PCL
 #ifdef  PCL_INSTALLED
 #include <pcl/io/impl/octree_pointcloud_compression.hpp>
@@ -91,11 +86,11 @@ namespace pcl{
       unsigned char recent_tree_depth =
         static_cast<unsigned char> (getTreeDepth ());
 
-#ifdef DELETE_BUFFER_IN_ENCODER
+#ifdef CWIPC_CODEC_DELETE_BUFFER_IN_ENCODER
       // CWI addition to prevent crashes as in original cloud codec
       deleteCurrentBuffer();
 #endif
-#ifdef DELETE_TREE_IN_ENCODER
+#ifdef CWIPC_CODEC_DELETE_TREE_IN_ENCODER
       //
       // xxxjack tried to remove this code: it isn't in the original
       // octree_pointcloud_compression and removing it gives a significant
@@ -193,7 +188,7 @@ namespace pcl{
         }
         else
         {
-#ifdef CWIPC_CODEC_WITHOUT_2BUF
+#ifdef CWIPC_CODEC_WITH_SINGLE_BUF
           abort();
 #else
           // p-frame encoding - XOR encoded tree structure
@@ -207,7 +202,7 @@ namespace pcl{
         // apply entropy coding to the content of all data vectors and send data to output stream
         entropyEncoding(compressed_tree_data_out_arg, compressed_tree_data_out_arg);
 
-#ifndef CWIPC_CODEC_WITHOUT_2BUF
+#ifndef CWIPC_CODEC_WITH_SINGLE_BUF
         switchBuffers();
 #endif
           
@@ -322,7 +317,7 @@ namespace pcl{
         // i-frame decoding - decode tree structure without referencing previous buffer
         deserializeTree (binary_tree_data_vector_);
       } else {
-#ifdef CWIPC_CODEC_WITHOUT_2BUF
+#ifdef CWIPC_CODEC_WITH_SINGLE_BUF
         abort();
 #else
         // p-frame decoding - decode XOR encoded tree structure

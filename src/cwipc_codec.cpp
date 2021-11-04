@@ -24,7 +24,7 @@
 //
 // Define the codec we want to use. Main options are probably using OctreeBase or Octree2BufBase.
 //
-#ifdef CWIPC_CODEC_WITHOUT_2BUF
+#ifdef CWIPC_CODEC_WITH_SINGLE_BUF
 typedef pcl::octree::OctreeBase<pcl::octree::OctreeContainerPointIndices,pcl::octree::OctreeContainerEmpty> cwipc_octree_type;
 #else
 typedef pcl::octree::Octree2BufBase<pcl::octree::OctreeContainerPointIndices,pcl::octree::OctreeContainerEmpty> cwipc_octree_type;

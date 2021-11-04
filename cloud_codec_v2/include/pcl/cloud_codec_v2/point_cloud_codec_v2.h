@@ -361,7 +361,7 @@ namespace pcl{
         using OctreeT::deserializeTree; // does not work in windows
         using OctreeT::leaf_count_;
         using OctreeT::serializeTree;
-#ifndef CWIPC_CODEC_WITHOUT_2BUF
+#ifndef CWIPC_CODEC_WITH_SINGLE_BUF
         using OctreeT::switchBuffers;
         using OctreeT::deleteCurrentBuffer;
 #endif
