@@ -12,6 +12,7 @@
 // a decent path for testing.
 //
 #define COUNT 50
+#undef READ_DEBUGDUMP
 
 std::vector<int> all_octree_bits { 6, 9 };
 std::vector<int> all_jpeg_quality { 85 };
@@ -21,14 +22,22 @@ int main(int argc, char** argv)
 {
 	uint64_t timestamp = 0LL;
     if (argc != 2) {
+#ifdef READ_DEBUGDUMP
+        std::cerr << "Usage: " << argv[0] << " pointcloudfile.cwipcdump" << std::endl;
+#else
         std::cerr << "Usage: " << argv[0] << " pointcloudfile.ply" << std::endl;
+#endif
         return 2;
     }
     //
     // Read pointcloud file
     //
     char *errorMessage = NULL;
-    cwipc *pc = cwipc_read(argv[1], 0LL, &errorMessage, CWIPC_API_VERSION);
+#ifdef READ_DEBUGDUMP
+    cwipc* pc = cwipc_read_debugdump(argv[1], &errorMessage, CWIPC_API_VERSION);
+#else
+    cwipc* pc = cwipc_read(argv[1], 0LL, &errorMessage, CWIPC_API_VERSION);
+#endif
 
     if (pc == NULL || errorMessage) {
         std::cerr << argv[0] << ": Error reading pointcloud from " << argv[1] << ": " << errorMessage << std::endl;
