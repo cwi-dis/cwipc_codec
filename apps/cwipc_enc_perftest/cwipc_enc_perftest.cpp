@@ -11,12 +11,40 @@
 // so ../../../cwipc_codec/tests/fixtures/input/loot_tiled.ply is
 // a decent path for testing.
 //
-#define COUNT 50
-#undef READ_DEBUGDUMP
+#define COUNT 200
+#define READ_DEBUGDUMP
+#define SINGLE_QUALITY
+#undef READ_MULTIPLE
 
+#ifdef SINGLE_QUALITY
+std::vector<int> all_octree_bits{ 9 };
+std::vector<int> all_jpeg_quality{ 85 };
+std::vector<int> all_tilenumber{ 0 };
+#else
 std::vector<int> all_octree_bits { 6, 9 };
 std::vector<int> all_jpeg_quality { 85 };
 std::vector<int> all_tilenumber { 1, 2, 3, 4 };
+#endif
+
+cwipc* readpc(const char* name, int index) {
+    //
+    // Read pointcloud file
+    //
+    char* errorMessage = NULL;
+    char namebuf[1024];
+    snprintf(namebuf, sizeof(namebuf), name, index);
+#ifdef READ_DEBUGDUMP
+    cwipc* pc = cwipc_read_debugdump(namebuf, &errorMessage, CWIPC_API_VERSION);
+#else
+    cwipc* pc = cwipc_read(namebuf, 0LL, &errorMessage, CWIPC_API_VERSION);
+#endif
+
+    if (pc == NULL || errorMessage) {
+        std::cerr << "cwipc_enc_perftest: Error reading pointcloud from " << namebuf << ": " << errorMessage << std::endl;
+        exit(1);
+    }
+    return pc;
+}
 
 int main(int argc, char** argv)
 {
@@ -29,20 +57,9 @@ int main(int argc, char** argv)
 #endif
         return 2;
     }
-    //
-    // Read pointcloud file
-    //
-    char *errorMessage = NULL;
-#ifdef READ_DEBUGDUMP
-    cwipc* pc = cwipc_read_debugdump(argv[1], &errorMessage, CWIPC_API_VERSION);
-#else
-    cwipc* pc = cwipc_read(argv[1], 0LL, &errorMessage, CWIPC_API_VERSION);
-#endif
-
-    if (pc == NULL || errorMessage) {
-        std::cerr << argv[0] << ": Error reading pointcloud from " << argv[1] << ": " << errorMessage << std::endl;
-        return 1;
-    }
+    cwipc* pc = nullptr;
+    pc = readpc(argv[1], 0);
+  
     std::cerr << argv[0] << ": Read pointcloud, " << pc->count() << " points, " << pc->get_uncompressed_size() << " bytes (uncompressed)" << std::endl;
     //
     // Compress
@@ -87,6 +104,10 @@ int main(int argc, char** argv)
     
     for (int i=0; i<COUNT; i++) {
     	encodergroup->feed(pc);
+#ifdef READ_MULTIPLE
+        pc->free();
+        pc = readpc(argv[1], i + 1);
+#endif
         for(cwipc_encoder *e: encoders) {
             bool ok = e->available(true);
             if (!ok) {
