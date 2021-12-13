@@ -12,7 +12,7 @@
 // a decent path for testing.
 //
 #define COUNT 200
-#define READ_DEBUGDUMP
+#undef READ_DEBUGDUMP
 #define SINGLE_QUALITY
 #undef READ_MULTIPLE
 
