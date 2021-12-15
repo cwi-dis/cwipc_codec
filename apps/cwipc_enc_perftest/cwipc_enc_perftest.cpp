@@ -11,33 +11,25 @@
 // so ../../../cwipc_codec/tests/fixtures/input/loot_tiled.ply is
 // a decent path for testing.
 //
-#define COUNT 200
-#undef READ_DEBUGDUMP
-#define SINGLE_QUALITY
+#define COUNT 50
 #undef READ_MULTIPLE
 
-#ifdef SINGLE_QUALITY
-std::vector<int> all_octree_bits{ 9 };
-std::vector<int> all_jpeg_quality{ 85 };
-std::vector<int> all_tilenumber{ 0 };
-#else
-std::vector<int> all_octree_bits { 6, 9 };
-std::vector<int> all_jpeg_quality { 85 };
-std::vector<int> all_tilenumber { 1, 2, 3, 4 };
-#endif
+char *progname;
+char *filename;
 
-cwipc* readpc(const char* name, int index) {
+cwipc* readpc(int index) {
     //
     // Read pointcloud file
     //
     char* errorMessage = NULL;
     char namebuf[1024];
-    snprintf(namebuf, sizeof(namebuf), name, index);
-#ifdef READ_DEBUGDUMP
-    cwipc* pc = cwipc_read_debugdump(namebuf, &errorMessage, CWIPC_API_VERSION);
-#else
-    cwipc* pc = cwipc_read(namebuf, 0LL, &errorMessage, CWIPC_API_VERSION);
-#endif
+    snprintf(namebuf, sizeof(namebuf), filename, index);
+    cwipc *pc;
+    if (strcmp(namebuf+strlen(namebuf)-4, ".ply") == 0) {
+	    pc = cwipc_read(namebuf, 0LL, &errorMessage, CWIPC_API_VERSION);
+    } else {
+	    pc = cwipc_read_debugdump(namebuf, &errorMessage, CWIPC_API_VERSION);
+    }
 
     if (pc == NULL || errorMessage) {
         std::cerr << "cwipc_enc_perftest: Error reading pointcloud from " << namebuf << ": " << errorMessage << std::endl;
@@ -46,24 +38,12 @@ cwipc* readpc(const char* name, int index) {
     return pc;
 }
 
-int main(int argc, char** argv)
-{
-	uint64_t timestamp = 0LL;
-    if (argc != 2) {
-#ifdef READ_DEBUGDUMP
-        std::cerr << "Usage: " << argv[0] << " pointcloudfile.cwipcdump" << std::endl;
-#else
-        std::cerr << "Usage: " << argv[0] << " pointcloudfile.ply" << std::endl;
-#endif
-        return 2;
-    }
+int measure(std::vector<int>& all_octree_bits, std::vector<int>& all_jpeg_quality, std::vector<int> all_tilenumber) {
     cwipc* pc = nullptr;
-    pc = readpc(argv[1], 0);
+    pc = readpc(0);
   
-    std::cerr << argv[0] << ": Read pointcloud, " << pc->count() << " points, " << pc->get_uncompressed_size() << " bytes (uncompressed)" << std::endl;
-    //
-    // Compress
-    //
+    std::cerr << progname << ": Read pointcloud, " << pc->count() << " points, " << pc->get_uncompressed_size() << " bytes (uncompressed)" << std::endl;
+
     cwipc_encoder_params param;
 	param.do_inter_frame = false;
 	param.gop_size = 1;
@@ -77,7 +57,7 @@ int main(int argc, char** argv)
 	char *errorString;
     cwipc_encodergroup *encodergroup = cwipc_new_encodergroup(&errorString, CWIPC_API_VERSION);
     if (encodergroup == NULL) {
-        std::cerr << argv[0] << ": Could not create encodergroup: " << errorString << std::endl;
+        std::cerr << progname << ": Could not create encodergroup: " << errorString << std::endl;
         return 1;
     }
     std::vector<cwipc_encoder *> encoders;
@@ -89,7 +69,7 @@ int main(int argc, char** argv)
                 param.tilenumber = tilenumber;
                 cwipc_encoder *e = encodergroup->addencoder(CWIPC_ENCODER_PARAM_VERSION, &param, &errorString);
                 if (e == NULL) {
-                    std::cerr << argv[0] << ": Could not create encoder: " << errorString << std::endl;
+                    std::cerr << progname << ": Could not create encoder: " << errorString << std::endl;
                     return 1;
                 }
                 encoders.push_back(e);
@@ -97,7 +77,6 @@ int main(int argc, char** argv)
         }
     }
     
-    auto t0_cpu = std::clock();
     auto t0_wall = std::chrono::high_resolution_clock::now();
     size_t totalBufSize = 0;
     int totalCount = 0;
@@ -106,12 +85,12 @@ int main(int argc, char** argv)
     	encodergroup->feed(pc);
 #ifdef READ_MULTIPLE
         pc->free();
-        pc = readpc(argv[1], i + 1);
+        pc = readpc(i + 1);
 #endif
         for(cwipc_encoder *e: encoders) {
             bool ok = e->available(true);
             if (!ok) {
-                std::cerr << argv[0] << ": Encoder did not create compressed data" << std::endl;
+                std::cerr << progname << ": Encoder did not create compressed data" << std::endl;
                 return 1;
             }
             size_t bufSize = e->get_encoded_size();
@@ -119,30 +98,71 @@ int main(int argc, char** argv)
             totalCount++;
             char *buffer = (char *)malloc(bufSize);
             if (buffer == NULL) {
-                std::cerr << argv[0] << ": Could not allocate " << bufSize << " bytes." << std::endl;
+                std::cerr << progname << ": Could not allocate " << bufSize << " bytes." << std::endl;
                 return 1;
             }
             ok = e->copy_data(buffer, bufSize);
             if (!ok) {
-                std::cerr << argv[0] << ": Encoder could not copy compressed data" << std::endl;
+                std::cerr << progname << ": Encoder could not copy compressed data" << std::endl;
                 return 1;
             }
             free(buffer);
         }
     }
     
-    auto t1_cpu = std::clock();
     auto t1_wall = std::chrono::high_resolution_clock::now();
     
-    double delta_cpu = (double)(t1_cpu - t0_cpu) *1000.0 / CLOCKS_PER_SEC;
     double delta_wall = std::chrono::duration<double, std::milli>(t1_wall - t0_wall).count();
-	delta_cpu /= COUNT;
 	delta_wall /= COUNT;
-    std::cerr << argv[0] << ": Compressed " << COUNT << " times, output: " << totalBufSize/COUNT << " bytes per input cloud, " << totalBufSize/totalCount << " average per output packet" << std::endl;
-    std::cerr << std::fixed << std::setprecision(2) << argv[0] << ": per iteration: cpu: " <<  delta_cpu << " ms, real: " << delta_wall << "ms" << std::endl;
+    std::cerr << progname << ": Compressed " << COUNT << " times using " << all_octree_bits.size()*all_jpeg_quality.size()*all_tilenumber.size() << " compressors , output: " << totalBufSize/COUNT << " bytes per input cloud, " << totalBufSize/totalCount << " average per output stream" << std::endl;
+    std::cerr << std::fixed << std::setprecision(2) << progname << ": per iteration: " << delta_wall << "ms" << std::endl;
 
     pc->free();	// After feeding the pointcloud into the encoder we can free it.
     encodergroup->free(); // We don't need the encoder anymore.
     return 0;
 }
 
+
+int main(int argc, char** argv)
+{
+	auto t0_wall = std::chrono::high_resolution_clock::now();
+    uint64_t timestamp = 0LL;
+    progname = argv[0];
+    if (argc != 2) {
+#ifdef READ_DEBUGDUMP
+        std::cerr << "Usage: " << progname << " pointcloudfile.cwipcdump" << std::endl;
+#else
+        std::cerr << "Usage: " << progname << " pointcloudfile.ply" << std::endl;
+#endif
+        return 2;
+    }
+    filename = argv[1];
+    
+    //
+    // Compress
+    //
+    {
+		std::vector<int> all_octree_bits{ 9 };
+		std::vector<int> all_jpeg_quality{ 85 };
+		std::vector<int> all_tilenumber{ 0 };
+        if (measure(all_octree_bits, all_jpeg_quality, all_tilenumber)) return 1;
+	}
+    {
+		std::vector<int> all_octree_bits{ 9 };
+		std::vector<int> all_jpeg_quality{ 85 };
+		std::vector<int> all_tilenumber{ 1, 2, 3, 4 };
+        if (measure(all_octree_bits, all_jpeg_quality, all_tilenumber)) return 1;
+	}
+    {
+		std::vector<int> all_octree_bits{ 9, 6 };
+		std::vector<int> all_jpeg_quality{ 85 };
+		std::vector<int> all_tilenumber{ 1, 2, 3, 4 };
+        if (measure(all_octree_bits, all_jpeg_quality, all_tilenumber)) return 1;
+	}
+    auto t1_wall = std::chrono::high_resolution_clock::now();
+    double delta_wall = std::chrono::duration<double, std::milli>(t1_wall - t0_wall).count();
+	
+	std::cerr << std::fixed << std::setprecision(2) << progname << ": total runtime: " << delta_wall << "ms" << std::endl;
+
+	return 0;
+}
