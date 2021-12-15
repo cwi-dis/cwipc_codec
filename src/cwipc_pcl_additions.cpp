@@ -1,5 +1,7 @@
 #define PCL_NO_PRECOMPILE
 
+#include "cwipc_codec_config.h"
+
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
 #include <pcl/common/transforms.h>
@@ -12,10 +14,21 @@
 #include "cwipc_util/api_pcl.h"
 #include "cwipc_util/api.h"
 
+#ifdef CWIPC_CODEC_WITH_SINGLE_BUF
+typedef pcl::octree::OctreeBase<pcl::octree::OctreeContainerPointIndices,pcl::octree::OctreeContainerEmpty> cwipc_octree_type;
+#else
+typedef pcl::octree::Octree2BufBase<pcl::octree::OctreeContainerPointIndices,pcl::octree::OctreeContainerEmpty> cwipc_octree_type;
+#endif
+
 namespace pcl {
 
 namespace io {
-template class OctreePointCloudCodecV2<cwipc_pcl_point>;
+template class OctreePointCloudCodecV2<
+    cwipc_pcl_point,
+    pcl::octree::OctreeContainerPointIndices,
+    pcl::octree::OctreeContainerEmpty,
+    cwipc_octree_type
+    >;
 }
 
 namespace octree {
@@ -24,10 +37,7 @@ template class OctreePointCloud<
     cwipc_pcl_point,
     pcl::octree::OctreeContainerPointIndices,
     pcl::octree::OctreeContainerEmpty,
-    pcl::octree::Octree2BufBase<
-        pcl::octree::OctreeContainerPointIndices,
-        pcl::octree::OctreeContainerEmpty
-        >
+    cwipc_octree_type
     >;
 }
 
