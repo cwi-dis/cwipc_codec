@@ -3,6 +3,7 @@
 #include <fstream>
 #include <chrono>
 #include <vector>
+#include <cstring>
 #include "cwipc_codec/api.h"
 
 //
