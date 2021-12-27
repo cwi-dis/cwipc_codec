@@ -140,6 +140,7 @@ public:
         if (m_use_threads) {
             if (m_queued_pc) m_queued_pc->free();
             m_queued_pc = cwipc_from_pcl(pc->access_pcl_pointcloud(), pc->timestamp(), nullptr, CWIPC_API_VERSION);
+            m_queued_pc->_set_cellsize(pc->cellsize());
             pc = nullptr;
             m_queue_tilefilter.enqueue(m_queued_pc);
         } else {
