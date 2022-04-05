@@ -47,7 +47,7 @@ if(Python3_FOUND)
 		string(REPLACE ";" "\\;" prevpath "$ENV{PATH}")
 		set_property(
 			TEST cwipc_codec_python_tests
-			APPEND PROPERTY ENVIRONMENT "PATH=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}Release\;${prevpath}"
+			APPEND PROPERTY ENVIRONMENT "PATH=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CMAKE_BUILD_TYPE}/;${prevpath}"
 		)
 		set_property(TEST cwipc_codec_python_tests APPEND PROPERTY ENVIRONMENT PYTHONPATH=${cwipc_util_PYTHON_DIRS};$ENV{PYTHONPATH})
 	endif()
