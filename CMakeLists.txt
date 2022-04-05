@@ -41,11 +41,6 @@ project(cwipc_codec)
 include(CTest)
 include(GNUInstallDirs)
 
-# Ensure all executable, dll/so and link-library outputs end up in the same directories
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/${CMAKE_BUILD_TYPE})
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib/${CMAKE_BUILD_TYPE})
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib/${CMAKE_BUILD_TYPE})
-
 # On Windows we pass JPEG_Turbo_ROOT on the command line. This needs policy 74.
 cmake_policy(SET CMP0074 NEW)
 
