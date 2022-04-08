@@ -17,7 +17,7 @@ from cwipc.util import _cwipc_dll_search_path_collection
 # NOTE: this list must be kept up-to-date otherwise loading DLLs will fail with
 # an obscure message "Python could not find module .... or one of its dependencies"
 #
-_WINDOWS_NEEDED_DLLS=[
+_WINDOWS_NEEDED_DLLS=[ # NOT USED AT THE TIME. CAUSING DLL Loading problems
     "turbojpeg",
     "jpeg62"
 ]
@@ -46,7 +46,7 @@ def _cwipc_codec_dll(libname=None):
         if not libname:
             raise RuntimeError('Dynamic library cwipc_codec not found')
     assert libname
-    with _cwipc_dll_search_path_collection(_WINDOWS_NEEDED_DLLS):
+    with _cwipc_dll_search_path_collection(None):
         _cwipc_codec_dll_reference = ctypes.CDLL(libname)
     
 
