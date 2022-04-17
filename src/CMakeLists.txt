@@ -35,7 +35,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-cmake_minimum_required(VERSION 3.10.0)
+cmake_minimum_required(VERSION 3.16.0)
 
 
 add_library(cwipc_codec SHARED cwipc_codec.cpp cwipc_pcl_additions.cpp)

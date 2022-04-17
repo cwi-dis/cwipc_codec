@@ -41,13 +41,12 @@ project(cwipc_codec)
 include(CTest)
 include(GNUInstallDirs)
 
-# On Windows we pass JPEG_Turbo_ROOT on the command line. This needs policy 74.
-cmake_policy(SET CMP0074 NEW)
 
 #
 # Find cwipc_util
 #
 if( CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR )
+	message(WARNING Building cwipc_codec outside cwipc umbrella is not tested)
 	find_package(cwipc_util REQUIRED)
 	include_directories(${cwipc_util_INCLUDE_DIRS})
 	link_directories(${cwipc_util_LIBRARY_DIRS})
@@ -61,31 +60,28 @@ set(QUIET_FLAG QUIET)
 #xxxjack find_package(PCL 1.11 REQUIRED COMPONENTS common geometry io filters sample_consensus segmentation kdtree features surface octree registration keypoints tracking search recognition)
 find_package(PCL 1.10 REQUIRED COMPONENTS common geometry io filters octree)
 find_package(Boost 1.47.0 ${QUIET_FLAG} REQUIRED COMPONENTS system filesystem thread date_time iostreams chrono program_options)
-find_package(JPEG_Turbo ${QUIET_FLAG} REQUIRED)
+find_package(libjpeg-turbo ${QUIET_FLAG} REQUIRED)
 
 # Expose public includes and libraries to subprojects
 set(${PROJECT_NAME}_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/include
-                                 ${JPEG_Turbo_INCLUDE_DIR}
                                  ${Boost_INCLUDE_DIR}
                                  ${PCL_INCLUDE_DIRS}
                                  ${EIGEN_INCLUDE_DIRS}
     CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE)
 
 set(${PROJECT_NAME}_LIBRARY_DIRS ${PROJECT_SOURCE_DIR}/lib
-                                 ${JPEG_Turbo_LIBRARY_DIR}
                                  ${Boost_LIBRARY_DIR}
                                  ${PCL_LIBRARY_DIRS}
     CACHE INTERNAL "${PROJECT_NAME}: Library Directories" FORCE)
 
 set(${PROJECT_NAME}_LIBRARIES
-                                 ${JPEG_Turbo_LIBRARIES}
                                  ${VTK_LIBRARIES}
                                  ${Boost_LIBRARIES}
                                  ${PCL_LIBRARIES}
+								 libjpeg-turbo::jpeg
     CACHE INTERNAL "${PROJECT_NAME}: Libraries" FORCE)
 
 set(${PROJECT_NAME}_DEFINITIONS
-                                 ${JPEG_Turbo_DEFINITIONS} -DWITH_JPEG8=1
                                  ${Boost_DEFINITIONS}
                                  ${PCL_DEFINITIONS}
     CACHE INTERNAL "${PROJECT_NAME}: Definitions" FORCE)
