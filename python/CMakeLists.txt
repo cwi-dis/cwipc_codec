@@ -41,7 +41,7 @@ cwipc_install_wheel(NAME "cwipc_codec" WHEELDIR ${CMAKE_PYWHEELS_OUTPUT_DIRECTOR
 add_test(NAME _python_setup_cwipc_codec
 	COMMAND ${Python3_EXECUTABLE} -m pip install --upgrade --find-links=${CMAKE_PYWHEELS_OUTPUT_DIRECTORY} cwipc_codec
 	)
-set_tests_properties(_python_setup_cwipc_codec PROPERTIES FIXTURES_SETUP venv)
+set_tests_properties(_python_setup_cwipc_codec PROPERTIES FIXTURES_SETUP venv RUN_SERIAL TRUE)
 
 
 add_test(NAME cwipc_codec_python_tests
