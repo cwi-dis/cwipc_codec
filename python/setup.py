@@ -4,6 +4,10 @@ See:
 https://packaging.python.org/en/latest/distributing.html
 https://github.com/pypa/sampleproject
 """
+import os
+CWIPC_VERSION="7.1+unknown"
+if 'CWIPC_VERSION' in os.environ:
+    CWIPC_VERSION=os.environ['CWIPC_VERSION']
 
 # Always prefer setuptools over distutils
 from setuptools import setup, find_packages
@@ -39,7 +43,7 @@ setup(
     # For a discussion on single-sourcing the version across setup.py and the
     # project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='7.1',  # Required
+    version=CWIPC_VERSION,  # Required
 
     # This is a one-line description or tagline of what your project does. This
     # corresponds to the "Summary" metadata field:
