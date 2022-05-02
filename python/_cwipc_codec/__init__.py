@@ -1,3 +1,4 @@
+import os
 import ctypes
 import ctypes.util
 import warnings
@@ -41,13 +42,17 @@ def _cwipc_codec_dll(libname=None):
     global _cwipc_codec_dll_reference
     if _cwipc_codec_dll_reference: return _cwipc_codec_dll_reference
     
-    if libname == None:
-        libname = ctypes.util.find_library('cwipc_codec')
-        if not libname:
-            raise RuntimeError('Dynamic library cwipc_codec not found')
-    assert libname
-    with _cwipc_dll_search_path_collection(None):
+    with _cwipc_dll_search_path_collection(None) as loader:
+        if libname == None:
+            libname = 'cwipc_codec'
+        if not os.path.isabs(libname):
+            libname = loader.find_library(libname)
+            if not libname:
+                raise RuntimeError('Dynamic library cwipc_codec not found')
+        assert libname
         _cwipc_codec_dll_reference = ctypes.CDLL(libname)
+        if not _cwipc_codec_dll_reference:
+            raise RuntimeError(f'Dynamic library {libname} cannot be loaded')
     
 
     _cwipc_codec_dll_reference.cwipc_new_encoder.argtypes = [ctypes.c_int, ctypes.POINTER(cwipc_encoder_params), ctypes.POINTER(ctypes.c_char_p), ctypes.c_ulong]
