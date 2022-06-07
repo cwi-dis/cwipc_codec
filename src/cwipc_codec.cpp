@@ -298,8 +298,12 @@ private:
     std::mutex m_next_out_mutex;
     int m_next_out;
 public:
-    cwipc_multithreaded_encoder_impl(cwipc_encoder_params *params) {
-        m_nencoder = params->n_parallel;
+    cwipc_multithreaded_encoder_impl(cwipc_encoder_params *params)
+    :
+        m_nencoder(params->n_parallel),
+        m_next_in(0),
+        m_next_out(0)
+    {
         for(int i=0; i<m_nencoder; i++) {
             auto e = new cwipc_encoder_impl(params);
             e->enable_threads();
