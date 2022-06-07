@@ -28,6 +28,7 @@ int main(int argc, char** argv)
     // Compress
     //
     cwipc_encoder_params param;
+	memset(&param, 0, sizeof(param));
 	param.do_inter_frame = false;
 	param.gop_size = 1;
 	param.exp_factor = 1.0;
@@ -35,6 +36,7 @@ int main(int argc, char** argv)
 	param.jpeg_quality = 85;
 	param.macroblock_size = 16;
 	param.tilenumber = 0;
+    param.n_parallel = 0;
 
 	if (argc > 4) param.octree_bits = atoi(argv[4]);
 	if (argc > 5) param.jpeg_quality = atoi(argv[5]);

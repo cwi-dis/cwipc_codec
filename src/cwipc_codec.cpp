@@ -535,7 +535,7 @@ cwipc_encoder* cwipc_new_encoder(int version, cwipc_encoder_params *params, char
         return NULL;
     }
     if (params == NULL) {
-    	static cwipc_encoder_params dft = {false, 1, 1.0, 9, 85, 16, 0, 0};
+    	static cwipc_encoder_params dft = {false, 1, 1.0, 9, 85, 16, 0, 0, 0};
     	params = &dft;
 	}
 	// Check parameters for this release
