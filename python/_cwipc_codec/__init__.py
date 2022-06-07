@@ -108,8 +108,9 @@ class cwipc_encoder_params(ctypes.Structure):
         ("macroblock_size", ctypes.c_int),
         ("tilenumber", ctypes.c_int),
         ("voxelsize", ctypes.c_float),
-    ]
-CWIPC_ENCODER_PARAM_VERSION = 0x20190506
+        ("n_parallel", ctypes.c_int),
+        ]
+CWIPC_ENCODER_PARAM_VERSION = 0x20220607
 
 class cwipc_encoder_wrapper:
     def __init__(self, _cwipc_encoder):

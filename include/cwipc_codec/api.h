@@ -30,6 +30,7 @@ struct cwipc_encoder_params
     int macroblock_size;	/**< (unused in this version, ignored) macroblock size for inter-frame prediction */
     int tilenumber;			/**< 0 for encoding full pointclouds, > 0 for selecting a single tile to encode */
     float voxelsize;		/**< If non-zero run voxelizer with this cell size to get better tiled pointcloud */
+    int n_parallel; 		/**< If greater than 1 use multiple parallel threads for subsequent pointclouds */
 };
 
 /** \brief Version of cwipc_encoder_params structure.
@@ -39,7 +40,8 @@ struct cwipc_encoder_params
  * also pass this version number, to ensure your code is compatible with this version
  * of the library.
  */
-#define CWIPC_ENCODER_PARAM_VERSION 0x20190506
+#define CWIPC_ENCODER_PARAM_VERSION 0x20220607
+#define CWIPC_ENCODER_PARAM_VERSION_OLD 0x20190506
 
 #ifdef __cplusplus
 

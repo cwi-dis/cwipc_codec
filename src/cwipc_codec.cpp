@@ -288,6 +288,78 @@ private:
     cwipc *m_queued_pc;
 };
 
+class cwipc_multithreaded_encoder_impl : public cwipc_encoder
+{
+private:
+    std::vector<cwipc_encoder_impl*> m_encoders;
+    int m_nencoder;
+    std::mutex m_next_in_mutex;
+    int m_next_in;
+    std::mutex m_next_out_mutex;
+    int m_next_out;
+public:
+    cwipc_multithreaded_encoder_impl(cwipc_encoder_params *params) {
+        m_nencoder = params->n_parallel;
+        for(int i=0; i<m_nencoder; i++) {
+            auto e = new cwipc_encoder_impl(params);
+            e->enable_threads();
+            m_encoders.push_back(e);
+        }
+    }
+
+    ~cwipc_multithreaded_encoder_impl() {}
+
+    void free() {
+    	for (auto enc: m_encoders) {
+    		enc->free();
+		}
+		m_encoders.clear();
+        m_nencoder = 0;
+    };
+    
+    void close() {
+        for (auto enc : m_encoders) enc->close();
+    }
+
+	void feed(cwipc *pc) {
+        std::lock_guard<std::mutex> lock(m_next_in_mutex);
+        m_encoders[m_next_in]->feed(pc);
+        m_next_in = (m_next_in+1) % m_nencoder;
+    }
+
+    bool eof() {
+        std::lock_guard<std::mutex> lock(m_next_out_mutex);
+        if (m_nencoder == 0) return true;
+        return m_encoders[m_next_out]->eof();
+    };
+    
+    bool available(bool wait) {
+        std::lock_guard<std::mutex> lock(m_next_out_mutex);
+        if (m_nencoder == 0) return false;
+        return m_encoders[m_next_out]->available(wait);
+    };
+    
+    bool at_gop_boundary() {
+        std::lock_guard<std::mutex> lock(m_next_out_mutex);
+        if (m_nencoder == 0) return true;
+        return m_encoders[m_next_out]->at_gop_boundary();
+    };
+    
+    size_t get_encoded_size() { 
+        std::lock_guard<std::mutex> lock(m_next_out_mutex);
+        if (m_nencoder == 0) return 0;
+        return m_encoders[m_next_out]->get_encoded_size();
+    };
+    
+    bool copy_data(void *buffer, size_t bufferSize) {
+        std::lock_guard<std::mutex> lock(m_next_out_mutex);
+        if (m_nencoder == 0) return false;
+        int cur = m_next_out;
+        m_next_out = (m_next_out+1) % m_nencoder;
+        return m_encoders[cur]->copy_data(buffer, bufferSize);
+    };
+};
+
 class cwipc_encodergroup_impl : public cwipc_encodergroup
 {
 public:
@@ -458,8 +530,8 @@ cwipc_encoder* cwipc_new_encoder(int version, cwipc_encoder_params *params, char
 		}
 		return NULL;
 	}
-    if (version != CWIPC_ENCODER_PARAM_VERSION) {
-    	*errorMessage = (char *)"cwpic_bew_encoder: incorrect encoder param version";
+    if (version != CWIPC_ENCODER_PARAM_VERSION && version != CWIPC_ENCODER_PARAM_VERSION_OLD) {
+    	*errorMessage = (char *)"cwipc_new_encoder: incorrect encoder param version";
         return NULL;
     }
     if (params == NULL) {
@@ -475,6 +547,9 @@ cwipc_encoder* cwipc_new_encoder(int version, cwipc_encoder_params *params, char
 		*errorMessage = (char *)"cwipc_new_encoder: gop_size must be 1 for this version";
 		return NULL;
 	}
+    if (version == CWIPC_ENCODER_PARAM_VERSION && params->n_parallel > 1) {
+        return new cwipc_multithreaded_encoder_impl(params);
+    }
     return new cwipc_encoder_impl(params);
 }
 
