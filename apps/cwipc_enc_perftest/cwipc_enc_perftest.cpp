@@ -4,6 +4,7 @@
 #include <chrono>
 #include <vector>
 #include <cstring>
+#include <string.h>
 #include "cwipc_codec/api.h"
 
 //
