@@ -437,6 +437,7 @@ class cwipc_decoder_impl : public cwipc_decoder
 public:
     cwipc_decoder_impl() 
     : m_result(NULL),
+      m_decoder_V2_(nullptr),
       m_alive(true)
     {}
     
@@ -462,6 +463,40 @@ public:
             std::cerr << "cwipc_decoder: feed() called after close()" << std::endl;
             return;
         }
+        if (m_decoder_V2_ == nullptr) alloc_decoder();
+
+        cwipc_pcl_pointcloud decpc = new_cwipc_pcl_pointcloud();
+        std::string str((char *)buffer, bufferSize);
+        std::stringstream istream(str);
+        uint64_t timeStamp = 0;
+        bool ok = m_decoder_V2_->decodePointCloud(istream, decpc, timeStamp);
+        if (decpc->size() == 1) {
+            // Special case: single point (0,0,0,0,0,0) signals an empty pointcloud
+            cwipc_pcl_point& pt(decpc->at(0));
+            if (abs(pt.x) < 0.01 && abs(pt.y) < 0.01 && abs(pt.z) < 0.01
+                && pt.r < 2 && pt.g < 2 && pt.b < 2
+                ) {
+                decpc->clear();
+            }
+        }
+        std::lock_guard<std::mutex> lock(m_result_mutex);
+        if (ok) {
+            m_result = cwipc_from_pcl(decpc, timeStamp, NULL, CWIPC_API_VERSION);
+            m_result->_set_cellsize(m_decoder_V2_->octreeResolution);
+        } else {
+            m_result = NULL;
+        }
+        m_result_cv.notify_one();
+    };
+    
+    cwipc *get() {
+        std::lock_guard<std::mutex> lock(m_result_mutex);
+        cwipc *rv = m_result;
+        m_result = NULL;
+        return rv;
+    };
+private:
+    void alloc_decoder() {
         cwipc_encoder_params par;
         //Default codec parameter values set in signals
         par.do_inter_frame = false;
@@ -472,10 +507,7 @@ public:
         par.macroblock_size = 16;
         std::stringstream compfr;
         //Convert buffer to stringstream for encoding
-        std::string str((char *)buffer, bufferSize);
-        std::stringstream istream(str);
-        pcl::shared_ptr<cwipc_pointcloud_codec > decoder_V2_;
-        decoder_V2_ = pcl::shared_ptr<cwipc_pointcloud_codec > (
+        m_decoder_V2_ = pcl::shared_ptr<cwipc_pointcloud_codec > (
             new cwipc_pointcloud_codec (
                 pcl::io::MANUAL_CONFIGURATION,
                 false,
@@ -492,38 +524,12 @@ public:
                 par.jpeg_quality,
                 num_threads
                 ));
-        cwipc_pcl_pointcloud decpc = new_cwipc_pcl_pointcloud();
-        uint64_t timeStamp = 0;
-        bool ok = decoder_V2_->decodePointCloud(istream, decpc, timeStamp);
-        if (decpc->size() == 1) {
-            // Special case: single point (0,0,0,0,0,0) signals an empty pointcloud
-            cwipc_pcl_point& pt(decpc->at(0));
-            if (abs(pt.x) < 0.01 && abs(pt.y) < 0.01 && abs(pt.z) < 0.01
-                && pt.r < 2 && pt.g < 2 && pt.b < 2
-                ) {
-                decpc->clear();
-            }
-        }
-        std::lock_guard<std::mutex> lock(m_result_mutex);
-        if (ok) {
-            m_result = cwipc_from_pcl(decpc, timeStamp, NULL, CWIPC_API_VERSION);
-            m_result->_set_cellsize(decoder_V2_->octreeResolution);
-        } else {
-            m_result = NULL;
-        }
-        m_result_cv.notify_one();
-    };
-    
-    cwipc *get() {
-        std::lock_guard<std::mutex> lock(m_result_mutex);
-        cwipc *rv = m_result;
-        m_result = NULL;
-        return rv;
-    };
-private:
+    }
+
     cwipc *m_result;
     std::mutex m_result_mutex;
     std::condition_variable m_result_cv;
+    pcl::shared_ptr<cwipc_pointcloud_codec > m_decoder_V2_;
     bool m_alive;
 };
 
