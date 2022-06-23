@@ -257,8 +257,8 @@ class TestApi(unittest.TestCase):
     def test_cwipc_parallel_encoder(self):
         """Test that a parallel encoder returns the same compressed data as a non-parallel one"""       
         gen = cwipc.cwipc_synthetic()
-        params1 = _cwipc_codec.cwipc_encoder_params()
-        params2 = _cwipc_codec.cwipc_encoder_params()
+        params1 = _cwipc_codec.cwipc_new_encoder_params()
+        params2 = _cwipc_codec.cwipc_new_encoder_params()
         enc1 = _cwipc_codec.cwipc_new_encoder(params=params1)
         enc2 = _cwipc_codec.cwipc_new_encoder(params=params2)
         for i in range(10):
