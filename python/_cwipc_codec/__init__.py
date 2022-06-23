@@ -108,8 +108,9 @@ class cwipc_encoder_params(ctypes.Structure):
         ("macroblock_size", ctypes.c_int),
         ("tilenumber", ctypes.c_int),
         ("voxelsize", ctypes.c_float),
-    ]
-CWIPC_ENCODER_PARAM_VERSION = 0x20190506
+        ("n_parallel", ctypes.c_int),
+        ]
+CWIPC_ENCODER_PARAM_VERSION = 0x20220607
 
 class cwipc_encoder_wrapper:
     def __init__(self, _cwipc_encoder):
@@ -224,7 +225,7 @@ class cwipc_decoder_wrapper(cwipc_source):
             _cwipc_codec_dll().cwipc_decoder_close(self._as_cwipc_decoder_p())
 
 def cwipc_new_encoder_params(**kwargs):
-    params = cwipc_encoder_params(False, 1, 1, 9, 85, 16, 0, 0)
+    params = cwipc_encoder_params(False, 1, 1, 9, 85, 16, 0, 0, 0)
     for k, v in kwargs.items():
         assert hasattr(params, k), 'No encoder_param named {}'.format(k)
         setattr(params, k, v)

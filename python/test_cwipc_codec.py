@@ -252,8 +252,29 @@ class TestApi(unittest.TestCase):
         
         # xxxjack todo: decompress both and compare
         group.free()
-        pc_orig.free()        
+        pc_orig.free() 
 
+    def test_cwipc_parallel_encoder(self):
+        """Test that a parallel encoder returns the same compressed data as a non-parallel one"""       
+        gen = cwipc.cwipc_synthetic()
+        params1 = _cwipc_codec.cwipc_new_encoder_params()
+        params2 = _cwipc_codec.cwipc_new_encoder_params()
+        enc1 = _cwipc_codec.cwipc_new_encoder(params=params1)
+        enc2 = _cwipc_codec.cwipc_new_encoder(params=params2)
+        for i in range(10):
+            pc = gen.get()
+            enc1.feed(pc)
+            enc2.feed(pc)
+            self.assertTrue(enc1.available(True))
+            self.assertTrue(enc2.available(True))
+            pc.free()
+            pc = None
+            out1 = enc1.get_bytes()
+            out2 = enc2.get_bytes()
+            self.assertEqual(out1, out2)
+        enc1.free()
+        enc2.free()
+    
     def _verify_pointcloud(self, pc):
         points = pc.get_points()
         self.assertGreater(len(points), 1)

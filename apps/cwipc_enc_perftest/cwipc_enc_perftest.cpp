@@ -4,6 +4,7 @@
 #include <chrono>
 #include <vector>
 #include <cstring>
+#include <string.h>
 #include "cwipc_codec/api.h"
 
 //
@@ -46,6 +47,7 @@ int measure(std::vector<int>& all_octree_bits, std::vector<int>& all_jpeg_qualit
     std::cerr << progname << ": Read pointcloud, " << pc->count() << " points, " << pc->get_uncompressed_size() << " bytes (uncompressed)" << std::endl;
 
     cwipc_encoder_params param;
+    memset(&param, 0, sizeof(param));
 	param.do_inter_frame = false;
 	param.gop_size = 1;
 	param.exp_factor = 1.0;
@@ -54,6 +56,7 @@ int measure(std::vector<int>& all_octree_bits, std::vector<int>& all_jpeg_qualit
 	param.macroblock_size = 16;
 	param.tilenumber = 0;
     param.voxelsize = 0;
+    param.n_parallel = 0;
 
 	char *errorString;
     cwipc_encodergroup *encodergroup = cwipc_new_encodergroup(&errorString, CWIPC_API_VERSION);
