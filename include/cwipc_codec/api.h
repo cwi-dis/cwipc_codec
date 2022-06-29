@@ -54,6 +54,12 @@ struct cwipc_encoder_params
 class cwipc_encoder
 {
 public:
+    /** \brief Destructor. Does not free underlying encoder.
+     * 
+     * You must call free() before calling the destructor (unless you have passed
+     * the cwipc object across an implementation language boundary and a reference
+     * may still be held there).
+     * / 
     virtual ~cwipc_encoder() {}
 
     /** \brief Deallocate the encoder.
@@ -111,19 +117,23 @@ public:
      */
     virtual bool copy_data(void *buffer, size_t bufferSize) = 0;
     
-    /** \brief Check whether we are at a Group-of-Pointclouds boundary
+    /** \brief Check whether we are at a Group-of-Pointclouds boundary.
      *
      * \return true if the next compressed pointcloud should begin a new GOP.
      */
      virtual bool at_gop_boundary() = 0;
 };
 
-/** \brief Pointcloud encoder, abstract C++ interface.
+/** \brief Pointcloud multiencoder, abstract C++ interface.
  *
  * This interface is provided by group of pointcloud compressors. The caller
  * feeds in pointclouds (as `cwipc` objects). Each pointcloud is fed to every
- * encoder in the group, and these encoders return the compressed pointcloud
+ * encoder in the group, and every encoder returns the compressed pointcloud
  * data.
+ * 
+ * The intention of this interface is that multiple encoders can run in parallel threads,
+ * for example if the encoders operate on different tiles, or create encodings
+ * at multiple quality levels.
  */
 class cwipc_encodergroup
 {
@@ -186,6 +196,9 @@ public:
      * Use this call to pass a new compressed pointcloud into the decoder.
      * After decompression `available()` will return true, and `get()` can be
      * used to obtain the cwipc pointcloud data.
+     * 
+     * The caller remains the owner of the buffer, i.e. after feed returns the caller can
+     * free the buffer.
      */
     virtual void feed(void *buffer, size_t bufferSize) = 0;
 
