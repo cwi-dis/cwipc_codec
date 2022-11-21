@@ -5,6 +5,7 @@
 #include <sstream>
 #include <thread>
 #include <condition_variable>
+#include <inttypes.h>
 
 #ifdef WIN32
 #define _CWIPC_CODEC_EXPORT __declspec(dllexport)
@@ -536,13 +537,19 @@ private:
 cwipc_encoder* cwipc_new_encoder(int version, cwipc_encoder_params *params, char **errorMessage, uint64_t apiVersion) {
 	if (apiVersion < CWIPC_API_VERSION_OLD || apiVersion > CWIPC_API_VERSION) {
 		if (errorMessage) {
-			*errorMessage = (char *)"cwipc_synthetic: incorrect apiVersion";
+            char* msgbuf = (char *)malloc(1024);
+            snprintf(msgbuf, 1024, "cwipc_new_encoder: incorrect apiVersion 0x%08" PRIx64 " expected 0x%08" PRIx64 "..0x%08" PRIx64 "", apiVersion, CWIPC_API_VERSION_OLD, CWIPC_API_VERSION);
+			*errorMessage = msgbuf;
 		}
 		return NULL;
 	}
     if (version != CWIPC_ENCODER_PARAM_VERSION && version != CWIPC_ENCODER_PARAM_VERSION_OLD) {
-    	*errorMessage = (char *)"cwipc_new_encoder: incorrect encoder param version";
-        return NULL;
+        if (errorMessage) {
+            char* msgbuf = (char*)malloc(1024);
+            snprintf(msgbuf, 1024, "cwipc_new_encoder: incorrect encoder param version 0x%08x expected 0x%08x or 0x%08x", version, CWIPC_ENCODER_PARAM_VERSION, CWIPC_ENCODER_PARAM_VERSION_OLD);
+            *errorMessage = msgbuf;
+        }
+    	return NULL;
     }
     if (params == NULL) {
     	static cwipc_encoder_params dft = {false, 1, 1.0, 9, 85, 16, 0, 0, 0};
@@ -550,12 +557,16 @@ cwipc_encoder* cwipc_new_encoder(int version, cwipc_encoder_params *params, char
 	}
 	// Check parameters for this release
 	if (params->do_inter_frame) {
-		*errorMessage = (char *)"cwipc_new_encoder: do_inter_frame must be false for this version";
+        if (errorMessage) {
+            *errorMessage = (char*)"cwipc_new_encoder: do_inter_frame must be false for this version";
+        }
 		return NULL;
 	}
 	if (params->gop_size != 1) {
-		*errorMessage = (char *)"cwipc_new_encoder: gop_size must be 1 for this version";
-		return NULL;
+        if (errorMessage) {
+            *errorMessage = (char*)"cwipc_new_encoder: gop_size must be 1 for this version";
+        }
+        return NULL;
 	}
     if (version == CWIPC_ENCODER_PARAM_VERSION && params->n_parallel > 1) {
         return new cwipc_multithreaded_encoder_impl(params);
@@ -598,8 +609,10 @@ bool cwipc_encoder_at_gop_boundary(cwipc_encoder *obj) {
 cwipc_encodergroup *cwipc_new_encodergroup(char **errorMessage, uint64_t apiVersion) {
 	if (apiVersion < CWIPC_API_VERSION_OLD || apiVersion > CWIPC_API_VERSION) {
 		if (errorMessage) {
-			*errorMessage = (char *)"cwipc_new_encodergroup: incorrect apiVersion";
-		}
+            char* msgbuf = (char*)malloc(1024);
+            snprintf(msgbuf, 1024, "cwipc_new_encodergroup: incorrect apiVersion 0x%08" PRIx64 " expected 0x%08" PRIx64 "..0x%08" PRIx64 "", apiVersion, CWIPC_API_VERSION_OLD, CWIPC_API_VERSION);
+            *errorMessage = msgbuf;
+     	}
 		return NULL;
 	}
 	return new cwipc_encodergroup_impl();
@@ -624,8 +637,10 @@ void cwipc_encodergroup_close(cwipc_encodergroup *obj) {
 cwipc_decoder* cwipc_new_decoder(char **errorMessage, uint64_t apiVersion) {
 	if (apiVersion < CWIPC_API_VERSION_OLD || apiVersion > CWIPC_API_VERSION) {
 		if (errorMessage) {
-			*errorMessage = (char *)"cwipc_synthetic: incorrect apiVersion";
-		}
+            char* msgbuf = (char*)malloc(1024);
+            snprintf(msgbuf, 1024, "cwipc_new_decoder: incorrect apiVersion 0x%08" PRIx64 " expected 0x%08" PRIx64 "..0x%08" PRIx64 "", apiVersion, CWIPC_API_VERSION_OLD, CWIPC_API_VERSION);
+            *errorMessage = msgbuf;
+  		}
 		return NULL;
 	}
     return new cwipc_decoder_impl();
