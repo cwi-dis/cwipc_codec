@@ -59,7 +59,7 @@ public:
      * You must call free() before calling the destructor (unless you have passed
      * the cwipc object across an implementation language boundary and a reference
      * may still be held there).
-     * / 
+     */ 
     virtual ~cwipc_encoder() {}
 
     /** \brief Deallocate the encoder.
