@@ -14,7 +14,7 @@ if 0:
     # - Attach to python in the XCode debugger
     # - press return to python3.
     import _cwipc_codec
-    _cwipc_codec._cwipc_codec_dll('/Users/jack/src/VRTogether/cwipc_codec/build-xcode/lib/Debug/libcwipc_codec.dylib')
+    _cwipc_codec.cwipc_codec_dll_load('/Users/jack/src/VRTogether/cwipc_codec/build-xcode/lib/Debug/libcwipc_codec.dylib')
     print('Type return after attaching in XCode debugger - ')
     sys.stdin.readline()
 
@@ -23,7 +23,7 @@ if 0:
 #
 if 'CWIPC_TEST_DLL' in os.environ:
 	filename = os.environ['CWIPC_TEST_DLL']
-	dllobj = _cwipc_codec._cwipc_codec_dll(filename)
+	dllobj = _cwipc_codec.cwipc_codec_dll_load(filename)
 #
 # Find directories for test inputs and outputs
 #
