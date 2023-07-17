@@ -154,15 +154,15 @@ class cwipc_encoder_wrapper:
         rv = cwipc_codec_dll_load().cwipc_encoder_get_encoded_size(self._as_cwipc_encoder_p())
         return rv
         
-    def get_bytes(self) -> Optional[bytearray]:
+    def get_bytes(self) -> bytearray:
         length = self.get_encoded_size()
         rv = bytearray(length)
         ptr_char = (ctypes.c_char * length).from_buffer(rv)
         ptr = ctypes.cast(ptr_char, ctypes.c_void_p)
         ok = cwipc_codec_dll_load().cwipc_encoder_copy_data(self._as_cwipc_encoder_p(), ptr, length)
-        if not ok:
-            return None
-        return rv
+        if ok:
+            return rv
+        raise CwipcError("get_bytes: cwipc_encoder_copy_data failed to return any data")
         
 class cwipc_encodergroup_wrapper:
     _cwipc_encodergroup : Optional[cwipc_encodergroup_p]
@@ -250,7 +250,6 @@ def cwipc_new_encoder(version : Optional[int]=None, params : Optional[dict[str,A
     if obj:
         return cwipc_encoder_wrapper(obj)
     raise CwipcError("cwipc_new_encoder: failed, but no specific error returned from C library")
-
 
 def cwipc_new_encodergroup() -> cwipc_encodergroup_wrapper:
     errorString = ctypes.c_char_p()
