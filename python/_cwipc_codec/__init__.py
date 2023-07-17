@@ -3,7 +3,7 @@ import ctypes
 import ctypes.util
 import warnings
 from typing import Optional, Any
-from cwipc.util import CwipcError, CWIPC_API_VERSION, cwipc, cwipc_source, cwipc_point, cwipc_point_array
+from cwipc.util import CwipcError, CWIPC_API_VERSION, cwipc, cwipc_source
 from cwipc.util import cwipc_p, cwipc_source_p
 from cwipc.util import _cwipc_dll_search_path_collection # type: ignore
 
@@ -39,7 +39,11 @@ _cwipc_codec_dll_reference = None
 # NOTE: the signatures here must match those in cwipc_util/api.h or all hell will break loose
 #
 def cwipc_codec_dll_load(libname : Optional[str]=None) -> ctypes.CDLL:
-    """Load the cwipc_util DLL and assign the signatures (if not already loaded)"""
+    """Load the cwipc_codec DLL and assign the signatures (if not already loaded).
+    
+    If you want to load a non-default native library (for example to allow debugging low level code)
+    call this method early, before any other method from this package.
+    """
     global _cwipc_codec_dll_reference
     if _cwipc_codec_dll_reference: return _cwipc_codec_dll_reference
     
@@ -94,12 +98,10 @@ def cwipc_codec_dll_load(libname : Optional[str]=None) -> ctypes.CDLL:
         _cwipc_codec_dll_reference.cwipc_decoder_close.argtypes = [cwipc_decoder_p]
         _cwipc_codec_dll_reference.cwipc_decoder_close.restype = None
 
-
-
     return _cwipc_codec_dll_reference
 
 class cwipc_encoder_params(ctypes.Structure):
-    """Parameters to control cwipc compression"""
+    """Parameters to control cwipc_encoder compression"""
     _fields_ = [
         ("do_inter_frame", ctypes.c_bool),
         ("gop_size", ctypes.c_int),
@@ -111,6 +113,7 @@ class cwipc_encoder_params(ctypes.Structure):
         ("voxelsize", ctypes.c_float),
         ("n_parallel", ctypes.c_int),
         ]
+    
 CWIPC_ENCODER_PARAM_VERSION = 0x20220607
 
 class cwipc_encoder_wrapper:
@@ -188,7 +191,7 @@ class cwipc_encodergroup_wrapper:
         rv = cwipc_codec_dll_load().cwipc_encodergroup_feed(self._as_cwipc_encodergroup_p(), pc.as_cwipc_p())
         return rv
         
-    def addencoder(self, version : Optional[int]=None, params : Optional[dict[str,Any]|cwipc_encoder_params]=None, **kwargs) -> cwipc_encoder_wrapper:
+    def addencoder(self, version : Optional[int]=None, params : Optional[dict[str,Any]|cwipc_encoder_params]=None, **kwargs : Any) -> cwipc_encoder_wrapper:
         if version == None:
             version = CWIPC_ENCODER_PARAM_VERSION
         if isinstance(params, cwipc_encoder_params):
@@ -215,10 +218,12 @@ class cwipc_decoder_wrapper(cwipc_source):
         assert self._cwipc_source
         return self._cwipc_source
         
-    def feed(self, buffer) -> None:
+    def feed(self, buffer : bytes | bytearray | ctypes.Array[ctypes.c_char]) -> None:
         length = len(buffer)
         if isinstance(buffer, bytearray):
             buffer = (ctypes.c_char * length).from_buffer(buffer)
+        elif isinstance(buffer, bytes):
+            buffer = (ctypes.c_char * length).from_buffer_copy(buffer)
         ptr = ctypes.cast(buffer, ctypes.c_void_p)
         rv = cwipc_codec_dll_load().cwipc_decoder_feed(self._as_cwipc_decoder_p(), ptr, length)
         return rv
@@ -227,14 +232,14 @@ class cwipc_decoder_wrapper(cwipc_source):
         if self._cwipc_source:
             cwipc_codec_dll_load().cwipc_decoder_close(self._as_cwipc_decoder_p())
 
-def cwipc_new_encoder_params(**kwargs) -> cwipc_encoder_params:
+def cwipc_new_encoder_params(**kwargs : Any) -> cwipc_encoder_params:
     params = cwipc_encoder_params(False, 1, 1, 9, 85, 16, 0, 0, 0)
     for k, v in kwargs.items():
         assert hasattr(params, k), 'No encoder_param named {}'.format(k)
         setattr(params, k, v)
     return params
 
-def cwipc_new_encoder(version : Optional[int]=None, params : Optional[dict[str,Any]|cwipc_encoder_params]=None, **kwargs) -> cwipc_encoder_wrapper:
+def cwipc_new_encoder(version : Optional[int]=None, params : Optional[dict[str,Any]|cwipc_encoder_params]=None, **kwargs : Any) -> cwipc_encoder_wrapper:
     if version == None:
         version = CWIPC_ENCODER_PARAM_VERSION
     if isinstance(params, cwipc_encoder_params):
