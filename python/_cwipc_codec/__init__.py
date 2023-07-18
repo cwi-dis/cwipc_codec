@@ -3,7 +3,7 @@ import ctypes
 import ctypes.util
 import warnings
 from typing import Optional, Any
-from cwipc.util import CwipcError, CWIPC_API_VERSION, cwipc, cwipc_source
+from cwipc.util import CwipcError, CWIPC_API_VERSION, cwipc_wrapper, cwipc_source_wrapper
 from cwipc.util import cwipc_p, cwipc_source_p
 from cwipc.util import _cwipc_dll_search_path_collection # type: ignore
 
@@ -149,7 +149,7 @@ class cwipc_encoder_wrapper:
         rv = cwipc_codec_dll_load().cwipc_encoder_available(self._as_cwipc_encoder_p(), wait)
         return rv
         
-    def feed(self, pc: cwipc) -> None:
+    def feed(self, pc: cwipc_wrapper) -> None:
         rv = cwipc_codec_dll_load().cwipc_encoder_feed(self._as_cwipc_encoder_p(), pc.as_cwipc_p())
         return rv
         
@@ -187,7 +187,7 @@ class cwipc_encodergroup_wrapper:
         if self._cwipc_encodergroup:
             cwipc_codec_dll_load().cwipc_encodergroup_close(self._as_cwipc_encodergroup_p())
 
-    def feed(self, pc : cwipc) -> None:
+    def feed(self, pc : cwipc_wrapper) -> None:
         rv = cwipc_codec_dll_load().cwipc_encodergroup_feed(self._as_cwipc_encodergroup_p(), pc.as_cwipc_p())
         return rv
         
@@ -208,11 +208,11 @@ class cwipc_encodergroup_wrapper:
             return cwipc_encoder_wrapper(obj)
         raise CwipcError("addencoder: failed, but no specific error returned from C library")
 
-class cwipc_decoder_wrapper(cwipc_source):
+class cwipc_decoder_wrapper(cwipc_source_wrapper):
     def __init__(self, _cwipc_decoder : Optional[cwipc_decoder_p]):
         if _cwipc_decoder != None:
             assert isinstance(_cwipc_decoder, cwipc_decoder_p)
-        cwipc_source.__init__(self, _cwipc_decoder)
+        cwipc_source_wrapper.__init__(self, _cwipc_decoder)
         
     def _as_cwipc_decoder_p(self) -> cwipc_source_p:
         assert self._cwipc_source
