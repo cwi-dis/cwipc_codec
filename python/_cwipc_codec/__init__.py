@@ -2,7 +2,7 @@ import os
 import ctypes
 import ctypes.util
 import warnings
-from typing import Optional, Any
+from typing import Optional, Any,Union
 from cwipc.util import CwipcError, CWIPC_API_VERSION, cwipc_wrapper, cwipc_source_wrapper
 from cwipc.util import cwipc_p, cwipc_source_p
 from cwipc.util import _cwipc_dll_search_path_collection # type: ignore
@@ -191,7 +191,7 @@ class cwipc_encodergroup_wrapper:
         rv = cwipc_codec_dll_load().cwipc_encodergroup_feed(self._as_cwipc_encodergroup_p(), pc.as_cwipc_p())
         return rv
         
-    def addencoder(self, version : Optional[int]=None, params : Optional[dict[str,Any]|cwipc_encoder_params]=None, **kwargs : Any) -> cwipc_encoder_wrapper:
+    def addencoder(self, version : Optional[int]=None, params : Union[dict[str,Any],cwipc_encoder_params, None]=None, **kwargs : Any) -> cwipc_encoder_wrapper:
         if version == None:
             version = CWIPC_ENCODER_PARAM_VERSION
         if isinstance(params, cwipc_encoder_params):
@@ -218,7 +218,7 @@ class cwipc_decoder_wrapper(cwipc_source_wrapper):
         assert self._cwipc_source
         return self._cwipc_source
         
-    def feed(self, buffer : bytes | bytearray | ctypes.Array[ctypes.c_char]) -> None:
+    def feed(self, buffer : Union[bytes, bytearray, ctypes.Array[ctypes.c_char]]) -> None:
         length = len(buffer)
         if isinstance(buffer, bytearray):
             buffer = (ctypes.c_char * length).from_buffer(buffer)
@@ -239,7 +239,7 @@ def cwipc_new_encoder_params(**kwargs : Any) -> cwipc_encoder_params:
         setattr(params, k, v)
     return params
 
-def cwipc_new_encoder(version : Optional[int]=None, params : Optional[dict[str,Any]|cwipc_encoder_params]=None, **kwargs : Any) -> cwipc_encoder_wrapper:
+def cwipc_new_encoder(version : Optional[int]=None, params : Union[dict[str,Any], cwipc_encoder_params]=None, **kwargs : Any) -> cwipc_encoder_wrapper:
     if version == None:
         version = CWIPC_ENCODER_PARAM_VERSION
     if isinstance(params, cwipc_encoder_params):
