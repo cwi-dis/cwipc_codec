@@ -14,7 +14,7 @@ if 0:
     # - Attach to python in the XCode debugger
     # - press return to python3.
     import _cwipc_codec
-    _cwipc_codec._cwipc_codec_dll('/Users/jack/src/VRTogether/cwipc_codec/build-xcode/lib/Debug/libcwipc_codec.dylib')
+    _cwipc_codec.cwipc_codec_dll_load('/Users/jack/src/VRTogether/cwipc_codec/build-xcode/lib/Debug/libcwipc_codec.dylib')
     print('Type return after attaching in XCode debugger - ')
     sys.stdin.readline()
 
@@ -23,19 +23,16 @@ if 0:
 #
 if 'CWIPC_TEST_DLL' in os.environ:
 	filename = os.environ['CWIPC_TEST_DLL']
-	dllobj = _cwipc_codec._cwipc_codec_dll(filename)
+	dllobj = _cwipc_codec.cwipc_codec_dll_load(filename)
 #
 # Find directories for test inputs and outputs
 #
-if 'CWIPC_TEST_DIR' in os.environ:
-    CWIPC_TEST_DIR=os.environ['CWIPC_TEST_DIR']
-else:
-    _thisdir=os.path.dirname(os.path.abspath(__file__))
-    _topdir=os.path.dirname(_thisdir)
-    TEST_FIXTURES_DIR=os.path.join(_topdir, "tests", "fixtures")
-    TEST_OUTPUT_DIR=os.path.join(TEST_FIXTURES_DIR, "output")
-    if not os.access(TEST_OUTPUT_DIR, os.W_OK):
-        TEST_OUTPUT_DIR=tempfile.mkdtemp('cwipc_codec_test')
+_thisdir=os.path.dirname(os.path.abspath(__file__))
+_topdir=os.path.dirname(_thisdir)
+TEST_FIXTURES_DIR=os.path.join(_topdir, "tests", "fixtures")
+TEST_OUTPUT_DIR=os.path.join(TEST_FIXTURES_DIR, "output")
+if not os.access(TEST_OUTPUT_DIR, os.W_OK):
+    TEST_OUTPUT_DIR=tempfile.mkdtemp('cwipc_codec_test')
 PLY_FILENAME=os.path.join(TEST_FIXTURES_DIR, "input", "pcl_frame1.ply")
 COMPRESSED_FILENAME=os.path.join(TEST_FIXTURES_DIR, "compressed", "pcl_frame1.cwicpc")
 
@@ -143,6 +140,8 @@ class TestApi(unittest.TestCase):
             decoder.feed(encoded_data)
             assert decoder.available(True)
             decoded_pc = decoder.get()
+            self.assertIsNotNone(decoded_pc)
+            assert decoded_pc # Only to keep linters happy
             points = decoded_pc.get_points()
             decoded_npoints = len(points)
             decoded_npoints_per_depth[depth] = decoded_npoints
@@ -188,6 +187,8 @@ class TestApi(unittest.TestCase):
         decoder.feed(compdata)
         self.assertTrue(decoder.available(False))
         pc = decoder.get()
+        self.assertIsNotNone(pc)
+        assert pc # Only to keep linters happy
         self.assertFalse(decoder.available(False))
         self._verify_pointcloud(pc)
         decoder.free()
@@ -203,6 +204,8 @@ class TestApi(unittest.TestCase):
         data = encoder.get_bytes()
         decoder.feed(data)
         pc2 = decoder.get()
+        self.assertIsNotNone(pc2)
+        assert pc2 # Only to keep linters happy
         self._verify_pointcloud(pc2)
         points = pc.get_points()
         points2 = pc2.get_points()
@@ -224,6 +227,8 @@ class TestApi(unittest.TestCase):
         self.assertNotEqual(len(data), 0)
         decoder.feed(data)
         pc2 = decoder.get()
+        self.assertIsNotNone(pc2)
+        assert pc2 # Only to keep linters happy
         points = pc.get_points()
         points2 = pc2.get_points()
         self.assertEqual(len(points), 0)
@@ -238,6 +243,8 @@ class TestApi(unittest.TestCase):
         """Test that a multiencoder setup for 2 octree depths returns sensible pointclouds"""
         gen = cwipc.cwipc_synthetic()
         pc_orig = gen.get()
+        self.assertIsNotNone(pc_orig)
+        assert pc_orig # Only to keep linters happy
         count_orig = len(pc_orig.get_points())
         group = _cwipc_codec.cwipc_new_encodergroup()
         enc_high = group.addencoder(octree_bits=9)
@@ -263,6 +270,8 @@ class TestApi(unittest.TestCase):
         enc2 = _cwipc_codec.cwipc_new_encoder(params=params2)
         for i in range(10):
             pc = gen.get()
+            self.assertIsNotNone(pc)
+            assert pc # Only to keep linters happy
             enc1.feed(pc)
             enc2.feed(pc)
             self.assertTrue(enc1.available(True))

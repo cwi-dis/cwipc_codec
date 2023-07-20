@@ -3,7 +3,7 @@ cmake_policy(SET CMP0074 NEW)
 
 # Setup venv-based Python
 
-include(SetupCwipcPythonVenv)
+include(CwipcPythonSupport)
 
 #
 # It is expected that CMAKE_PYWHEELS_INSTALL_DIRECTORY and CMAKE_PYWHEELS_OUTPUT_DIRECTORY
@@ -16,7 +16,7 @@ include(SetupCwipcPythonVenv)
 
 # Create Python wheel in the staging area
 
-cwipc_build_wheel(SOURCEDIR ${CMAKE_CURRENT_SOURCE_DIR} WHEELDIR ${CMAKE_PYWHEELS_OUTPUT_DIRECTORY})
+cwipc_build_wheel(NAME "cwipc_codec" SOURCEDIR ${CMAKE_CURRENT_SOURCE_DIR} WHEELDIR ${CMAKE_PYWHEELS_OUTPUT_DIRECTORY})
 file(COPY test_cwipc_codec.py DESTINATION ${CMAKE_PYWHEELS_OUTPUT_DIRECTORY})
 
 #
