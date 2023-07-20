@@ -3,7 +3,7 @@ cmake_policy(SET CMP0074 NEW)
 
 # Setup venv-based Python
 
-include(SetupCwipcPythonVenv)
+include(CwipcPythonSupport)
 
 #
 # It is expected that CMAKE_PYWHEELS_INSTALL_DIRECTORY and CMAKE_PYWHEELS_OUTPUT_DIRECTORY
