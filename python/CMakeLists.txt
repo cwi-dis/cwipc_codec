@@ -39,7 +39,7 @@ cwipc_install_wheel(NAME "cwipc_codec" WHEELDIR ${CMAKE_PYWHEELS_OUTPUT_DIRECTOR
 #	COMMAND ${Python3_EXECUTABLE} setup.py install WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
 #	)
 add_test(NAME _python_setup_cwipc_codec
-	COMMAND ${Python3_EXECUTABLE} -m pip install --upgrade --find-links=${CMAKE_PYWHEELS_OUTPUT_DIRECTORY} cwipc_codec
+	COMMAND ${Python3_EXECUTABLE} -m pip install --no-cache-dir --upgrade --find-links=${CMAKE_PYWHEELS_OUTPUT_DIRECTORY} cwipc_codec
 	)
 set_tests_properties(_python_setup_cwipc_codec PROPERTIES FIXTURES_SETUP venv RUN_SERIAL TRUE)
 

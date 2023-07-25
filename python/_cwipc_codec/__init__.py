@@ -239,11 +239,14 @@ def cwipc_new_encoder_params(**kwargs : Any) -> cwipc_encoder_params:
         setattr(params, k, v)
     return params
 
-def cwipc_new_encoder(version : Optional[int]=None, params : Union[dict[str,Any], cwipc_encoder_params]=None, **kwargs : Any) -> cwipc_encoder_wrapper:
+def cwipc_new_encoder(version : Optional[int]=None, params : Union[dict[str,Any], cwipc_encoder_params, None]=None, **kwargs : dict[str, Any]) -> cwipc_encoder_wrapper:
     if version == None:
         version = CWIPC_ENCODER_PARAM_VERSION
     if isinstance(params, cwipc_encoder_params):
-        pass
+        assert not kwargs
+    elif isinstance(params, dict):
+        params = cwipc_new_encoder_params(**params)
+        assert not kwargs
     else:
         params = cwipc_new_encoder_params(**kwargs)
     errorString = ctypes.c_char_p()
