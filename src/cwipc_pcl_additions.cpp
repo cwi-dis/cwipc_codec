@@ -21,26 +21,24 @@ typedef pcl::octree::Octree2BufBase<pcl::octree::OctreeContainerPointIndices,pcl
 #endif
 
 namespace pcl {
+    namespace io {
+        template class OctreePointCloudCodecV2<
+            cwipc_pcl_point,
+            pcl::octree::OctreeContainerPointIndices,
+            pcl::octree::OctreeContainerEmpty,
+            cwipc_octree_type
+        >;
+    }
 
-namespace io {
-template class OctreePointCloudCodecV2<
-    cwipc_pcl_point,
-    pcl::octree::OctreeContainerPointIndices,
-    pcl::octree::OctreeContainerEmpty,
-    cwipc_octree_type
-    >;
-}
+    namespace octree {
+        // This template declaration is needed for XCode build for profileing...
+        template class OctreePointCloud<
+            cwipc_pcl_point,
+            pcl::octree::OctreeContainerPointIndices,
+            pcl::octree::OctreeContainerEmpty,
+            cwipc_octree_type
+        >;
+    }
 
-namespace octree {
-// This template declaration is needed for XCode build for profileing...
-template class OctreePointCloud<
-    cwipc_pcl_point,
-    pcl::octree::OctreeContainerPointIndices,
-    pcl::octree::OctreeContainerEmpty,
-    cwipc_octree_type
-    >;
-}
-
-template class RadiusOutlierRemoval<cwipc_pcl_point>;
-
+    template class RadiusOutlierRemoval<cwipc_pcl_point>;
 }

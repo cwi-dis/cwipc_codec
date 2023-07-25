@@ -36,19 +36,19 @@ typedef pcl::io::OctreePointCloudCodecV2<
     OctreeContainerPointIndices,
     OctreeContainerEmpty,
     cwipc_octree_type
-    > cwipc_pointcloud_codec;
+> cwipc_pointcloud_codec;
 
 // Some parameters that will eventually be customizable again
 const int num_threads = 1;
 const bool downdownsampling = false;
 const int iframerate = 1;
 
-class cwipc_encoder_impl : public cwipc_encoder
-{
+class cwipc_encoder_impl : public cwipc_encoder {
 public:
     cwipc_encoder_impl(cwipc_encoder_params *_params)
-    :	m_encoder(NULL),
-    	m_params(*_params),
+    :
+        m_encoder(NULL),
+        m_params(*_params),
         m_result(NULL),
         m_result_size(0),
         m_remaining_frames_in_gop(0),
@@ -59,26 +59,32 @@ public:
         m_thread_encoder(nullptr),
         m_use_threads(false),
         m_queued_pc(nullptr)
-    {
+    {}
 
-	}
-    
     ~cwipc_encoder_impl() {}
-    
+
     void free() {
         close();
-        if (m_result) ::free(m_result);
-        if (m_queued_pc) m_queued_pc->free();
+
+        if (m_result) {
+            ::free(m_result);
+        }
+
+        if (m_queued_pc) {
+            m_queued_pc->free();
+        }
+
         m_queued_pc = nullptr;
         m_encoder = NULL;
         m_result = NULL;
         m_result_size = 0;
         m_result_cv.notify_all();
-    };
-    
+    }
+
     void close() {
         m_alive = false;
         m_result_cv.notify_all();
+
         if (m_use_threads) {
             m_queue_encoder.try_enqueue(nullptr);
             m_queue_tilefilter.try_enqueue(nullptr);
@@ -95,9 +101,12 @@ public:
             m_use_threads = false;
         }
     }
-    
+
     void enable_threads() {
-        if (m_use_threads) return;
+        if (m_use_threads) {
+            return;
+        }
+
         m_use_threads = true;
         m_thread_encoder = new std::thread([this] {
 #ifdef SET_THREAD_NAME
@@ -105,143 +114,195 @@ public:
             pthread_setname_np(name.c_str());
 #endif
             bool ok = true;
-            while(m_alive) {
-                if (!ok) std::cerr << "cwipc_encoder: threaded encoder failure" << std::endl;
+            while (m_alive) {
+                if (!ok) {
+                    std::cerr << "cwipc_encoder: threaded encoder failure" << std::endl;
+                }
+
                 ok = this->_run_single_encode();
             }
         });
+
         m_thread_tilefilter = new std::thread([this] {
 #ifdef SET_THREAD_NAME
             std::string name = "pc-tilefilter tile=" + std::to_string(this->m_params.tilenumber) + " depth=" + std::to_string(this->m_params.octree_bits);
             pthread_setname_np(name.c_str());
 #endif
             bool ok = true;
-            while(m_alive) {
-                if (!ok) std::cerr << "cwipc_encoder: threaded tilefilter failure" << std::endl;
+            while (m_alive) {
+                if (!ok) {
+                    std::cerr << "cwipc_encoder: threaded tilefilter failure" << std::endl;
+                }
+
                 this->_run_single_tilefilter();
             }
         });
     }
-    
-    bool eof() { return !m_alive; };
-    
+
+    bool eof() {
+        return !m_alive;
+    }
+
     bool available(bool wait) {
-    	std::unique_lock<std::mutex> lock(m_result_mutex);
-    	if (wait) m_result_cv.wait(lock, [this]{return m_result != NULL || !m_alive; });
-    	return m_result != NULL; 
-    };
-    
-    bool at_gop_boundary() { return m_remaining_frames_in_gop <= 0; };
+        std::unique_lock<std::mutex> lock(m_result_mutex);
+
+        if (wait) {
+            m_result_cv.wait(lock, [this] {
+                return m_result != NULL || !m_alive;
+            });
+        }
+
+        return m_result != NULL;
+    }
+
+    bool at_gop_boundary() {
+        return m_remaining_frames_in_gop <= 0;
+    }
 
     void feed(cwipc *pc) {
         if (!m_alive) {
             std::cerr << "cwipc_encoder: feed() after close()" << std::endl;
             return;
         }
+
         if (m_use_threads) {
-            if (m_queued_pc) m_queued_pc->free();
+            if (m_queued_pc) {
+                m_queued_pc->free();
+            }
+
             m_queued_pc = cwipc_from_pcl(pc->access_pcl_pointcloud(), pc->timestamp(), nullptr, CWIPC_API_VERSION);
             m_queued_pc->_set_cellsize(pc->cellsize());
+
             pc = nullptr;
             m_queue_tilefilter.enqueue(m_queued_pc);
         } else {
             bool ok;
+
             ok = m_queue_tilefilter.try_enqueue(pc);
-            if (!ok) std::cerr << "cwipc_encoder: unthreaded try_enqueue failed" << std::endl;
+            if (!ok) {
+                std::cerr << "cwipc_encoder: unthreaded try_enqueue failed" << std::endl;
+            }
 
             ok = _run_single_tilefilter();
-            if (!ok) std::cerr << "cwipc_encoder: unthreaded tilefilter failure" << std::endl;
+            if (!ok) {
+                std::cerr << "cwipc_encoder: unthreaded tilefilter failure" << std::endl;
+            }
 
             ok = _run_single_encode();
-            if (!ok) std::cerr << "cwipc_encoder: unthreaded encoder failure" << std::endl;
-
+            if (!ok) {
+                std::cerr << "cwipc_encoder: unthreaded encoder failure" << std::endl;
+            }
         }
-    };
-    
-    size_t get_encoded_size() { 
-    	// xxxjack note that this is not thread-safe: before the copy_data()
-    	// call another thread could have grabbed the data.
-    	return m_result_size; 
-    };
-    
+    }
+
+    size_t get_encoded_size() {
+      // xxxjack note that this is not thread-safe: before the copy_data()
+      // call another thread could have grabbed the data.
+      return m_result_size;
+    }
+
     bool copy_data(void *buffer, size_t bufferSize) {
-    	std::lock_guard<std::mutex> lock(m_result_mutex);
-        if (m_result == NULL || bufferSize < m_result_size) return false;
+        std::lock_guard<std::mutex> lock(m_result_mutex);
+
+        if (m_result == NULL || bufferSize < m_result_size) {
+            return false;
+        }
+
         memcpy(buffer, m_result, m_result_size);
         ::free(m_result);
+
         m_result = NULL;
         m_result_size = 0;
+
         return true;
-    };
-    
+    }
+
 private:
-	void alloc_encoder() {
-		// xxxjack note that feed() and alloc_encoder() are not thread-safe.
+    void alloc_encoder() {
+        // xxxjack note that feed() and alloc_encoder() are not thread-safe.
         double point_resolution = std::pow ( 2.0, -1.0 * m_params.octree_bits);
         double octree_resolution = std::pow ( 2.0, -1.0 * m_params.octree_bits);
+
         m_encoder = NULL;
         m_encoder = pcl::shared_ptr<cwipc_pointcloud_codec > (
             new cwipc_pointcloud_codec (
-                  pcl::io::MANUAL_CONFIGURATION,
-                  false,
-                  point_resolution,
-                  octree_resolution,
-                  downdownsampling, // no intra voxel coding in this first version of the codec
-                  iframerate, // i_frame_rate,
-                  true, // do color encoding
-                  8, // color bits
-                  1, // color coding type
-                  false, // centroid computation - expensive with little added value
-                  false, // scalable bitstream - not implemented
-                  false, // do_connectivity_coding_ not implemented
-                  m_params.jpeg_quality,
-                  num_threads
-                  ));
+                pcl::io::MANUAL_CONFIGURATION,
+                false,
+                point_resolution,
+                octree_resolution,
+                downdownsampling, // no intra voxel coding in this first version of the codec
+                iframerate, // i_frame_rate,
+                true, // do color encoding
+                8, // color bits
+                1, // color coding type
+                false, // centroid computation - expensive with little added value
+                false, // scalable bitstream - not implemented
+                false, // do_connectivity_coding_ not implemented
+                m_params.jpeg_quality,
+                num_threads
+            )
+        );
+
         m_encoder->setMacroblockSize(m_params.macroblock_size);
         m_remaining_frames_in_gop = m_params.gop_size;
-	}
-    
+    }
+
     bool _run_single_tilefilter() {
         cwipc *pc = nullptr;
         m_queue_tilefilter.wait_dequeue(pc);
-        if (pc == nullptr) return false;
+
+        if (pc == nullptr) {
+            return false;
+        }
+
         cwipc *newpc = nullptr;
+
         // Apply tile filtering, if needed
         if (m_params.tilenumber) {
             newpc = cwipc_tilefilter(pc, m_params.tilenumber);
+
             if (newpc == NULL) {
                 std::cerr << "cwipc_encoder: tilefilter failed" << std::endl;
                 return false;
             }
-        }
-        else {
+        } else {
             // Make shallow clone of pc
             newpc = cwipc_from_pcl(pc->access_pcl_pointcloud(), pc->timestamp(), nullptr, CWIPC_API_VERSION);
             newpc->_set_cellsize(pc->cellsize());
         }
+
         pc = nullptr; // Ensure we don't access this anymore.
         m_queue_encoder.enqueue(newpc);
+
         return true;
     }
-	
+
     bool _run_single_encode() {
         cwipc *newpc = nullptr;
         m_queue_encoder.wait_dequeue(newpc);
-        if (newpc == nullptr) return false;
+
+        if (newpc == nullptr) {
+            return false;
+        }
+
         std::stringstream comp_frame;
         // Allocate an encoder if none is available (we are at the beginning of a GOP)
-        if (m_encoder == NULL)
+        if (m_encoder == NULL) {
             alloc_encoder();
+        }
+
         bool start_new_gop = m_remaining_frames_in_gop <= 0;
         m_remaining_frames_in_gop = m_params.do_inter_frame ? m_params.gop_size : 1;
 
         cwipc_pcl_pointcloud pcl_pc = newpc->access_pcl_pointcloud();
+
         if (pcl_pc->size() == 0) {
             // Special case: if the point cloud is empty we compress a point cloud with a single black point at 0,0,0
             pcl_pc = new_cwipc_pcl_pointcloud();
             cwipc_pcl_point dummyPoint;
             pcl_pc->push_back(dummyPoint);
         }
+
         // Note by Jack: this is a hack. If the point granularity of the pointcloud
         // is larger (more coarse) than the octree_resolution in the encoder we adapt
         // the encoder parameter, so a reasonable value is transmitted in the output
@@ -250,8 +311,10 @@ private:
         if (cellsize > m_encoder->octreeResolution) {
             m_encoder->octreeResolution = cellsize;
         }
+
         m_encoder->encodePointCloud(pcl_pc, comp_frame, newpc->timestamp());
         m_remaining_frames_in_gop--;
+
 #ifdef delete_encoder_at_end_of_gop
         /* Free the encoder if we are at the end of the GOP */
         if (m_remaining_frames_in_gop <= 0) {
@@ -260,20 +323,23 @@ private:
 #endif
         /* Store the result */
         std::lock_guard<std::mutex> lock(m_result_mutex);
+
         if (m_result) {
             ::free(m_result);
             m_result = NULL;
             m_result_size = 0;
         }
+
         m_result_size = comp_frame.str().length();
         m_result = (void *)malloc(m_result_size);
         comp_frame.str().copy((char *)m_result, m_result_size);
         m_result_cv.notify_one();
         newpc->free();
+
         return true;
     }
-    
-	pcl::shared_ptr<cwipc_pointcloud_codec > m_encoder;
+
+    pcl::shared_ptr<cwipc_pointcloud_codec > m_encoder;
     cwipc_encoder_params m_params;
     void *m_result;
     size_t m_result_size;
@@ -289,8 +355,7 @@ private:
     cwipc *m_queued_pc;
 };
 
-class cwipc_multithreaded_encoder_impl : public cwipc_encoder
-{
+class cwipc_multithreaded_encoder_impl : public cwipc_encoder {
 private:
     std::vector<cwipc_encoder_impl*> m_encoders;
     int m_nencoder;
@@ -298,6 +363,7 @@ private:
     int m_next_in;
     std::mutex m_next_out_mutex;
     int m_next_out;
+
 public:
     cwipc_multithreaded_encoder_impl(cwipc_encoder_params *params)
     :
@@ -315,18 +381,19 @@ public:
     ~cwipc_multithreaded_encoder_impl() {}
 
     void free() {
-    	for (auto enc: m_encoders) {
-    		enc->free();
-		}
-		m_encoders.clear();
+        for (auto enc: m_encoders) {
+            enc->free();
+        }
+
+        m_encoders.clear();
         m_nencoder = 0;
-    };
-    
+    }
+
     void close() {
         for (auto enc : m_encoders) enc->close();
     }
 
-	void feed(cwipc *pc) {
+    void feed(cwipc *pc) {
         std::lock_guard<std::mutex> lock(m_next_in_mutex);
         m_encoders[m_next_in]->feed(pc);
         m_next_in = (m_next_in+1) % m_nencoder;
@@ -334,62 +401,83 @@ public:
 
     bool eof() {
         std::lock_guard<std::mutex> lock(m_next_out_mutex);
-        if (m_nencoder == 0) return true;
+
+        if (m_nencoder == 0) {
+            return true;
+        }
+
         return m_encoders[m_next_out]->eof();
-    };
-    
+    }
+
     bool available(bool wait) {
         std::lock_guard<std::mutex> lock(m_next_out_mutex);
-        if (m_nencoder == 0) return false;
+
+        if (m_nencoder == 0) {
+            return false;
+        }
+
         return m_encoders[m_next_out]->available(wait);
-    };
-    
+    }
+
     bool at_gop_boundary() {
         std::lock_guard<std::mutex> lock(m_next_out_mutex);
-        if (m_nencoder == 0) return true;
+
+        if (m_nencoder == 0) {
+            return true;
+        }
+
         return m_encoders[m_next_out]->at_gop_boundary();
-    };
-    
-    size_t get_encoded_size() { 
+    }
+
+    size_t get_encoded_size() {
         std::lock_guard<std::mutex> lock(m_next_out_mutex);
-        if (m_nencoder == 0) return 0;
+
+        if (m_nencoder == 0) {
+            return 0;
+        }
+
         return m_encoders[m_next_out]->get_encoded_size();
-    };
-    
+    }
+
     bool copy_data(void *buffer, size_t bufferSize) {
         std::lock_guard<std::mutex> lock(m_next_out_mutex);
-        if (m_nencoder == 0) return false;
+
+        if (m_nencoder == 0) {
+            return false;
+        }
+
         int cur = m_next_out;
         m_next_out = (m_next_out+1) % m_nencoder;
+
         return m_encoders[cur]->copy_data(buffer, bufferSize);
-    };
+    }
 };
 
-class cwipc_encodergroup_impl : public cwipc_encodergroup
-{
+class cwipc_encodergroup_impl : public cwipc_encodergroup {
 public:
-    cwipc_encodergroup_impl()
-    :	m_voxelsize(-1)
-    {
-	}
-
+    cwipc_encodergroup_impl() : m_voxelsize(-1) {}
     ~cwipc_encodergroup_impl() {}
 
     void free() {
-    	for (auto enc: m_encoders) {
-    		enc->free();
-		}
-		m_encoders.clear();
-    };
-    
-    void close() {
-        for (auto enc : m_encoders) enc->close();
+        for (auto enc: m_encoders) {
+            enc->free();
+        }
+
+        m_encoders.clear();
     }
 
-	void feed(cwipc *pc) {
-		cwipc *newpc = NULL;
+    void close() {
+        for (auto enc : m_encoders) {
+            enc->close();
+        }
+    }
+
+    void feed(cwipc *pc) {
+        cwipc *newpc = NULL;
+
         if (m_voxelsize > 0) {
             newpc = cwipc_downsample(pc, m_voxelsize);
+
             if (newpc == NULL) {
                 std::cerr << "cwipc_encodergroup: cwipc_downsample failed" << std::endl;
                 return;
@@ -399,22 +487,28 @@ public:
             newpc = cwipc_from_pcl(pc->access_pcl_pointcloud(), pc->timestamp(), nullptr, CWIPC_API_VERSION);
             newpc->_set_cellsize(pc->cellsize());
         }
+
         pc = nullptr; // Ensure we don't access this anymore.
-        
+
         for (auto enc : m_encoders) {
             enc->feed(newpc);
         }
-		newpc->free();
-	};
+        newpc->free();
+    }
 
-	cwipc_encoder *addencoder(int version, cwipc_encoder_params* params, char **errorMessage) {
-		if (m_voxelsize >= 0 && m_voxelsize != params->voxelsize) {
-			*errorMessage = (char *)"cwipc_encodergroup: voxelsize must be the same for all encoders";
-			return NULL;
-		}
-		m_voxelsize = params->voxelsize;
-		cwipc_encoder_impl *newEncoder = (cwipc_encoder_impl *)cwipc_new_encoder(version, params, errorMessage, CWIPC_API_VERSION);
-		if (newEncoder == NULL) return NULL;
+    cwipc_encoder *addencoder(int version, cwipc_encoder_params* params, char **errorMessage) {
+        if (m_voxelsize >= 0 && m_voxelsize != params->voxelsize) {
+            *errorMessage = (char *)"cwipc_encodergroup: voxelsize must be the same for all encoders";
+            return NULL;
+        }
+
+        m_voxelsize = params->voxelsize;
+        cwipc_encoder_impl *newEncoder = (cwipc_encoder_impl *)cwipc_new_encoder(version, params, errorMessage, CWIPC_API_VERSION);
+
+        if (newEncoder == NULL) {
+            return NULL;
+        }
+
         //
         // See if we should enable threading in the encoders.
         // If there was only a single one earlier we should enable threading for it too.
@@ -422,83 +516,99 @@ public:
         if (m_encoders.size() == 1) {
             m_encoders[0]->enable_threads();
         }
+
         if (m_encoders.size() > 0) {
             newEncoder->enable_threads();
         }
+
         m_encoders.push_back(newEncoder);
-		return newEncoder;
-	};
+        return newEncoder;
+    }
+
 private:
-	std::vector<cwipc_encoder_impl *> m_encoders;
-	float m_voxelsize;
+    std::vector<cwipc_encoder_impl *> m_encoders;
+    float m_voxelsize;
 };
 
-class cwipc_decoder_impl : public cwipc_decoder
-{
+class cwipc_decoder_impl : public cwipc_decoder {
 public:
-    cwipc_decoder_impl() 
-    : m_result(NULL),
-      m_decoder_V2_(nullptr),
-      m_alive(true)
-    {}
-    
+    cwipc_decoder_impl() : m_result(NULL), m_decoder_V2_(nullptr), m_alive(true) {}
     ~cwipc_decoder_impl() {}
-    
+
     void free() {
-    	m_alive = false;
-    	m_result_cv.notify_all();
-    };
-    
-    void close() { m_alive = false; }
-    
-    bool eof() { return !m_alive; };
-    
+        m_alive = false;
+        m_result_cv.notify_all();
+    }
+
+    void close() {
+        m_alive = false;
+    }
+
+    bool eof() {
+        return !m_alive;
+    }
+
     bool available(bool wait) {
-    	std::unique_lock<std::mutex> lock(m_result_mutex);
-    	if (wait) m_result_cv.wait(lock, [this]{return m_result != NULL || !m_alive; });
-    	return m_result != NULL; 
-    };
-    
+        std::unique_lock<std::mutex> lock(m_result_mutex);
+
+        if (wait) {
+            m_result_cv.wait(lock, [this]{
+                return m_result != NULL || !m_alive;
+            });
+        }
+
+        return m_result != NULL;
+    }
+
     void feed(void *buffer, size_t bufferSize) {
         if (!m_alive) {
             std::cerr << "cwipc_decoder: feed() called after close()" << std::endl;
             return;
         }
-        if (m_decoder_V2_ == nullptr) alloc_decoder();
+
+        if (m_decoder_V2_ == nullptr) {
+            alloc_decoder();
+        }
 
         cwipc_pcl_pointcloud decpc = new_cwipc_pcl_pointcloud();
         std::string str((char *)buffer, bufferSize);
         std::stringstream istream(str);
         uint64_t timeStamp = 0;
         bool ok = m_decoder_V2_->decodePointCloud(istream, decpc, timeStamp);
+
         if (decpc->size() == 1) {
             // Special case: single point (0,0,0,0,0,0) signals an empty pointcloud
             cwipc_pcl_point& pt(decpc->at(0));
-            if (abs(pt.x) < 0.01 && abs(pt.y) < 0.01 && abs(pt.z) < 0.01
-                && pt.r < 2 && pt.g < 2 && pt.b < 2
-                ) {
+
+            if (abs(pt.x) < 0.01 && abs(pt.y) < 0.01 && abs(pt.z) < 0.01 && pt.r < 2 && pt.g < 2 && pt.b < 2) {
                 decpc->clear();
             }
         }
+
         std::lock_guard<std::mutex> lock(m_result_mutex);
+
         if (ok) {
             m_result = cwipc_from_pcl(decpc, timeStamp, NULL, CWIPC_API_VERSION);
             m_result->_set_cellsize(m_decoder_V2_->octreeResolution);
         } else {
             m_result = NULL;
         }
+
         m_result_cv.notify_one();
-    };
-    
-    cwipc *get() {
+    }
+
+    cwipc* get() {
         std::lock_guard<std::mutex> lock(m_result_mutex);
         cwipc *rv = m_result;
         m_result = NULL;
+
         return rv;
-    };
+    }
+
 private:
     void alloc_decoder() {
         cwipc_encoder_params par;
+
         //Default codec parameter values set in signals
         par.do_inter_frame = false;
         par.gop_size = 1;
@@ -507,8 +617,9 @@ private:
         par.jpeg_quality = 85;
         par.macroblock_size = 16;
         std::stringstream compfr;
+
         //Convert buffer to stringstream for encoding
-        m_decoder_V2_ = pcl::shared_ptr<cwipc_pointcloud_codec > (
+        m_decoder_V2_ = pcl::shared_ptr<cwipc_pointcloud_codec> (
             new cwipc_pointcloud_codec (
                 pcl::io::MANUAL_CONFIGURATION,
                 false,
@@ -524,7 +635,8 @@ private:
                 false, // do_connectivity_coding_, not implemented
                 par.jpeg_quality,
                 num_threads
-                ));
+            )
+        );
     }
 
     cwipc *m_result;
@@ -535,42 +647,52 @@ private:
 };
 
 cwipc_encoder* cwipc_new_encoder(int version, cwipc_encoder_params *params, char **errorMessage, uint64_t apiVersion) {
-	if (apiVersion < CWIPC_API_VERSION_OLD || apiVersion > CWIPC_API_VERSION) {
-		if (errorMessage) {
+    if (apiVersion < CWIPC_API_VERSION_OLD || apiVersion > CWIPC_API_VERSION) {
+        if (errorMessage) {
             char* msgbuf = (char *)malloc(1024);
             snprintf(msgbuf, 1024, "cwipc_new_encoder: incorrect apiVersion 0x%08" PRIx64 " expected 0x%08" PRIx64 "..0x%08" PRIx64 "", apiVersion, CWIPC_API_VERSION_OLD, CWIPC_API_VERSION);
-			*errorMessage = msgbuf;
-		}
-		return NULL;
-	}
+            *errorMessage = msgbuf;
+        }
+
+        return NULL;
+    }
+
     if (version != CWIPC_ENCODER_PARAM_VERSION && version != CWIPC_ENCODER_PARAM_VERSION_OLD) {
         if (errorMessage) {
             char* msgbuf = (char*)malloc(1024);
             snprintf(msgbuf, 1024, "cwipc_new_encoder: incorrect encoder param version 0x%08x expected 0x%08x or 0x%08x", version, CWIPC_ENCODER_PARAM_VERSION, CWIPC_ENCODER_PARAM_VERSION_OLD);
             *errorMessage = msgbuf;
         }
-    	return NULL;
+
+        return NULL;
     }
+
     if (params == NULL) {
-    	static cwipc_encoder_params dft = {false, 1, 1.0, 9, 85, 16, 0, 0, 0};
-    	params = &dft;
-	}
-	// Check parameters for this release
-	if (params->do_inter_frame) {
+        static cwipc_encoder_params dft = {false, 1, 1.0, 9, 85, 16, 0, 0, 0};
+        params = &dft;
+    }
+
+    // Check parameters for this release
+    if (params->do_inter_frame) {
         if (errorMessage) {
             *errorMessage = (char*)"cwipc_new_encoder: do_inter_frame must be false for this version";
         }
-		return NULL;
-	}
-	if (params->gop_size != 1) {
+
+        return NULL;
+    }
+
+    if (params->gop_size != 1) {
         if (errorMessage) {
             *errorMessage = (char*)"cwipc_new_encoder: gop_size must be 1 for this version";
         }
+
         return NULL;
-	}
+    }
+
     if (version == CWIPC_ENCODER_PARAM_VERSION && params->n_parallel > 1) {
         return new cwipc_multithreaded_encoder_impl(params);
     }
+
     return new cwipc_encoder_impl(params);
 }
 
@@ -607,27 +729,29 @@ bool cwipc_encoder_at_gop_boundary(cwipc_encoder *obj) {
 }
 
 cwipc_encodergroup *cwipc_new_encodergroup(char **errorMessage, uint64_t apiVersion) {
-	if (apiVersion < CWIPC_API_VERSION_OLD || apiVersion > CWIPC_API_VERSION) {
-		if (errorMessage) {
+    if (apiVersion < CWIPC_API_VERSION_OLD || apiVersion > CWIPC_API_VERSION) {
+        if (errorMessage) {
             char* msgbuf = (char*)malloc(1024);
             snprintf(msgbuf, 1024, "cwipc_new_encodergroup: incorrect apiVersion 0x%08" PRIx64 " expected 0x%08" PRIx64 "..0x%08" PRIx64 "", apiVersion, CWIPC_API_VERSION_OLD, CWIPC_API_VERSION);
             *errorMessage = msgbuf;
-     	}
-		return NULL;
-	}
-	return new cwipc_encodergroup_impl();
-};
+        }
+
+        return NULL;
+    }
+
+    return new cwipc_encodergroup_impl();
+}
 
 void cwipc_encodergroup_free(cwipc_encodergroup *obj) {
     obj->free();
 }
 
 cwipc_encoder *cwipc_encodergroup_addencoder(cwipc_encodergroup *obj, int version, cwipc_encoder_params* params, char **errorMessage) {
-	return obj->addencoder(version, params, errorMessage);
+    return obj->addencoder(version, params, errorMessage);
 }
 
 void cwipc_encodergroup_feed(cwipc_encodergroup *obj, cwipc* pc) {
-	return obj->feed(pc);
+    return obj->feed(pc);
 }
 
 void cwipc_encodergroup_close(cwipc_encodergroup *obj) {
@@ -635,14 +759,16 @@ void cwipc_encodergroup_close(cwipc_encodergroup *obj) {
 }
 
 cwipc_decoder* cwipc_new_decoder(char **errorMessage, uint64_t apiVersion) {
-	if (apiVersion < CWIPC_API_VERSION_OLD || apiVersion > CWIPC_API_VERSION) {
-		if (errorMessage) {
+    if (apiVersion < CWIPC_API_VERSION_OLD || apiVersion > CWIPC_API_VERSION) {
+        if (errorMessage) {
             char* msgbuf = (char*)malloc(1024);
             snprintf(msgbuf, 1024, "cwipc_new_decoder: incorrect apiVersion 0x%08" PRIx64 " expected 0x%08" PRIx64 "..0x%08" PRIx64 "", apiVersion, CWIPC_API_VERSION_OLD, CWIPC_API_VERSION);
             *errorMessage = msgbuf;
-  		}
-		return NULL;
-	}
+        }
+
+        return NULL;
+    }
+
     return new cwipc_decoder_impl();
 }
 
