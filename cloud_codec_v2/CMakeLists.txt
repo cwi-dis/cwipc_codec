@@ -62,7 +62,7 @@ target_include_directories(${LIB_NAME}
 )
 
 target_compile_definitions(${LIB_NAME} PRIVATE -DPCL_INSTALLED ${PCL_DEFINITIONS})
-target_link_libraries(${LIB_NAME} PUBLIC ${PCL_LIBRARIES})
+target_link_libraries(${LIB_NAME} PUBLIC ${PCL_LIBRARIES} libjpeg-turbo::jpeg)
 #set(${PROJECT_NAME}_LIBRARY_DIRS
 #  ${CMAKE_CURRENT_BINARY_DIR}
 #  ${${PROJECT_NAME}_LIBRARY_DIRS}
