@@ -36,7 +36,6 @@
  */
 #include <quality_metrics.h>
 #include <quality_metrics_impl.hpp>
-template PCL_EXPORTS void
-computeQualityMetric<pcl::PointXYZRGB>(pcl::PointCloud<pcl::PointXYZRGB>&, pcl::PointCloud<pcl::PointXYZRGB>&, QualityMetric&);
-template PCL_EXPORTS void
-computeQualityMetric<pcl::PointXYZRGBA>(pcl::PointCloud<pcl::PointXYZRGBA>&, pcl::PointCloud<pcl::PointXYZRGBA>&, QualityMetric&);
+
+template PCL_EXPORTS void computeQualityMetric<pcl::PointXYZRGB>(pcl::PointCloud<pcl::PointXYZRGB>&, pcl::PointCloud<pcl::PointXYZRGB>&, QualityMetric&);
+template PCL_EXPORTS void computeQualityMetric<pcl::PointXYZRGBA>(pcl::PointCloud<pcl::PointXYZRGBA>&, pcl::PointCloud<pcl::PointXYZRGBA>&, QualityMetric&);
