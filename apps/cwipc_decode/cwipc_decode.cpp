@@ -20,15 +20,15 @@ int main(int argc, char** argv) {
     char *inputBuffer = (char *)malloc(filesize);
 
     if (inputBuffer == NULL) {
-    	std::cerr << argv[0] << ": could not allocate " << filesize << " bytes." << std::endl;
-    	return 1;
+        std::cerr << argv[0] << ": could not allocate " << filesize << " bytes." << std::endl;
+        return 1;
     }
 
     // Read all data
     input.seekg(0, std::ios::beg);
     input.read(inputBuffer, filesize);
     input.close();
-	std::cerr << "Read " << filesize << " compressed bytes." << std::endl;
+    std::cerr << "Read " << filesize << " compressed bytes." << std::endl;
 
     //
     // Uncompress
@@ -37,8 +37,8 @@ int main(int argc, char** argv) {
     cwipc_decoder *decoder = cwipc_new_decoder(&message, CWIPC_API_VERSION);
 
     if (decoder == NULL) {
-    	std::cerr << argv[0] << ": Could not create decoder:" << message << std::endl;
-    	return 1;
+        std::cerr << argv[0] << ": Could not create decoder:" << message << std::endl;
+        return 1;
     }
 
     decoder->feed(inputBuffer, filesize);
@@ -46,28 +46,28 @@ int main(int argc, char** argv) {
 
     bool ok = decoder->available(true);
     if (!ok) {
-    	std::cerr << argv[0] << ": Decoder did not create pointcloud" << std::endl;
-    	return 1;
+        std::cerr << argv[0] << ": Decoder did not create pointcloud" << std::endl;
+        return 1;
     }
 
     cwipc *pc = decoder->get();
 
     if (pc == NULL) {
-    	std::cerr << argv[0] << ": Decoder did not return cwipc" << std::endl;
-    	return 1;
+        std::cerr << argv[0] << ": Decoder did not return cwipc" << std::endl;
+        return 1;
     }
 
     decoder->free(); // We don't need the encoder anymore
-	std::cerr << "Decoded successfully, " <<pc->get_uncompressed_size() << " bytes (uncompressed), cellsize=" << pc->cellsize() << std::endl;
+    std::cerr << "Decoded successfully, " <<pc->get_uncompressed_size() << " bytes (uncompressed), cellsize=" << pc->cellsize() << std::endl;
 
     //
     // Save pointcloud file
     //
     if (cwipc_write(argv[2], pc, NULL) < 0) {
-    	std::cerr << argv[0] << ": Error writing PLY file " << argv[2] << std::endl;
-    	return 1;
+        std::cerr << argv[0] << ": Error writing PLY file " << argv[2] << std::endl;
+        return 1;
     }
 
-	pc->free(); // We no longer need to pointcloud
+    pc->free(); // We no longer need to pointcloud
     return 0;
 }

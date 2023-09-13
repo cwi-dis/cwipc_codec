@@ -163,14 +163,14 @@ public:
     virtual void close() = 0;
 
     /** \brief Add a new encoder to an encodergroup.
-	 * \param version Pass in CWIPC_ENCODER_PARAM_VERSION to ensure runtime compatibility.
-	 * \param params Pointer to a structure with parameters than govern the encoding process.
-	 * \param errorMessage Pointer to a string that will be filled with a message in case of errors.
-	 *
-	 * The returned object is the cwipc_encoder. It will return compressed pointcloud data
-	 * for each pointcloud fed into the group.
-	 */
-	virtual cwipc_encoder *addencoder(int version, cwipc_encoder_params* params, char **errorMessage) = 0;
+     * \param version Pass in CWIPC_ENCODER_PARAM_VERSION to ensure runtime compatibility.
+     * \param params Pointer to a structure with parameters than govern the encoding process.
+     * \param errorMessage Pointer to a string that will be filled with a message in case of errors.
+     *
+     * The returned object is the cwipc_encoder. It will return compressed pointcloud data
+     * for each pointcloud fed into the group.
+     */
+    virtual cwipc_encoder *addencoder(int version, cwipc_encoder_params* params, char **errorMessage) = 0;
 };
 
 /** \brief Pointcloud decoder, abstract C++ interface.
@@ -190,13 +190,13 @@ public:
     virtual cwipc *get() = 0;
 
     /** \brief Feed compressed data into the decoder.
-	 * \param buffer Pointer to the data buffer containing the compressed pointcloud data.
-	 * \param bufferSize Size of the data buffer.
+     * \param buffer Pointer to the data buffer containing the compressed pointcloud data.
+     * \param bufferSize Size of the data buffer.
      *
      * Use this call to pass a new compressed pointcloud into the decoder.
      * After decompression `available()` will return true, and `get()` can be
      * used to obtain the cwipc pointcloud data.
-     * 
+     *
      * The caller remains the owner of the buffer, i.e. after feed returns the caller can
      * free the buffer.
      */

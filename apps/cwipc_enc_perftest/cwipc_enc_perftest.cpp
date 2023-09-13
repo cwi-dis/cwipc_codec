@@ -29,9 +29,9 @@ cwipc* readpc(int index) {
     cwipc *pc;
 
     if (strcmp(namebuf+strlen(namebuf)-4, ".ply") == 0) {
-	    pc = cwipc_read(namebuf, 0LL, &errorMessage, CWIPC_API_VERSION);
+        pc = cwipc_read(namebuf, 0LL, &errorMessage, CWIPC_API_VERSION);
     } else {
-	    pc = cwipc_read_debugdump(namebuf, &errorMessage, CWIPC_API_VERSION);
+        pc = cwipc_read_debugdump(namebuf, &errorMessage, CWIPC_API_VERSION);
     }
 
     if (pc == NULL || errorMessage) {
@@ -50,18 +50,19 @@ int measure(std::vector<int>& all_octree_bits, std::vector<int>& all_jpeg_qualit
 
     cwipc_encoder_params param;
     memset(&param, 0, sizeof(param));
-	param.do_inter_frame = false;
-	param.gop_size = 1;
-	param.exp_factor = 1.0;
-	param.octree_bits = 0;
-	param.jpeg_quality = 0;
-	param.macroblock_size = 16;
-	param.tilenumber = 0;
+    param.do_inter_frame = false;
+    param.gop_size = 1;
+    param.exp_factor = 1.0;
+    param.octree_bits = 0;
+    param.jpeg_quality = 0;
+    param.macroblock_size = 16;
+    param.tilenumber = 0;
     param.voxelsize = 0;
     param.n_parallel = 0;
 
-	char *errorString;
+    char *errorString;
     cwipc_encodergroup *encodergroup = cwipc_new_encodergroup(&errorString, CWIPC_API_VERSION);
+
     if (encodergroup == NULL) {
         std::cerr << progname << ": Could not create encodergroup: " << errorString << std::endl;
         return 1;
@@ -92,7 +93,7 @@ int measure(std::vector<int>& all_octree_bits, std::vector<int>& all_jpeg_qualit
     int totalCount = 0;
 
     for (int i=0; i<COUNT; i++) {
-    	encodergroup->feed(pc);
+        encodergroup->feed(pc);
 
 #ifdef READ_MULTIPLE
         pc->free();
@@ -129,7 +130,7 @@ int measure(std::vector<int>& all_octree_bits, std::vector<int>& all_jpeg_qualit
     auto t1_wall = std::chrono::high_resolution_clock::now();
 
     double delta_wall = std::chrono::duration<double, std::milli>(t1_wall - t0_wall).count();
-	delta_wall /= COUNT;
+    delta_wall /= COUNT;
     std::cerr << progname << ": Compressed " << COUNT << " times using " << all_octree_bits.size()*all_jpeg_quality.size()*all_tilenumber.size() << " compressors , output: " << totalBufSize/COUNT << " bytes per input cloud, " << totalBufSize/totalCount << " average per output stream" << std::endl;
     std::cerr << std::fixed << std::setprecision(2) << progname << ": per iteration: " << delta_wall << "ms" << std::endl;
 
@@ -140,7 +141,7 @@ int measure(std::vector<int>& all_octree_bits, std::vector<int>& all_jpeg_qualit
 }
 
 int main(int argc, char** argv) {
-	auto t0_wall = std::chrono::high_resolution_clock::now();
+    auto t0_wall = std::chrono::high_resolution_clock::now();
     uint64_t timestamp = 0LL;
     progname = argv[0];
 
@@ -159,39 +160,39 @@ int main(int argc, char** argv) {
     // Compress
     //
     {
-		std::vector<int> all_octree_bits{ 9 };
-		std::vector<int> all_jpeg_quality{ 85 };
-		std::vector<int> all_tilenumber{ 0 };
+        std::vector<int> all_octree_bits{ 9 };
+        std::vector<int> all_jpeg_quality{ 85 };
+        std::vector<int> all_tilenumber{ 0 };
 
         if (measure(all_octree_bits, all_jpeg_quality, all_tilenumber)) {
             return 1;
         }
-	}
+    }
 
     {
-		std::vector<int> all_octree_bits{ 9 };
-		std::vector<int> all_jpeg_quality{ 85 };
-		std::vector<int> all_tilenumber{ 1, 2, 3, 4 };
+        std::vector<int> all_octree_bits{ 9 };
+        std::vector<int> all_jpeg_quality{ 85 };
+        std::vector<int> all_tilenumber{ 1, 2, 3, 4 };
 
         if (measure(all_octree_bits, all_jpeg_quality, all_tilenumber)) {
             return 1;
         }
-	}
+    }
 
     {
-		std::vector<int> all_octree_bits{ 9, 6 };
-		std::vector<int> all_jpeg_quality{ 85 };
-		std::vector<int> all_tilenumber{ 1, 2, 3, 4 };
+        std::vector<int> all_octree_bits{ 9, 6 };
+        std::vector<int> all_jpeg_quality{ 85 };
+        std::vector<int> all_tilenumber{ 1, 2, 3, 4 };
 
         if (measure(all_octree_bits, all_jpeg_quality, all_tilenumber)) {
             return 1;
         }
-	}
+    }
 
     auto t1_wall = std::chrono::high_resolution_clock::now();
     double delta_wall = std::chrono::duration<double, std::milli>(t1_wall - t0_wall).count();
 
-	std::cerr << std::fixed << std::setprecision(2) << progname << ": total runtime: " << delta_wall << "ms" << std::endl;
+    std::cerr << std::fixed << std::setprecision(2) << progname << ": total runtime: " << delta_wall << "ms" << std::endl;
 
-	return 0;
+    return 0;
 }
