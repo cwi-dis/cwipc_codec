@@ -80,5 +80,8 @@ install(EXPORT cwipc_codec
 	DESTINATION lib/cmake/cwipc_codec)
 
 if(WIN32)
+	# Copy the dependent DLLs that cmake/vcpkg have created
+	install(FILES $<TARGET_RUNTIME_DLLS:cwipc_codec> DESTINATION ${CMAKE_INSTALL_BINDIR})
+	# Copy the PDB file, if it exists
 	install(FILES $<TARGET_PDB_FILE:cwipc_codec> DESTINATION ${CMAKE_INSTALL_BINDIR} OPTIONAL)
 endif()
