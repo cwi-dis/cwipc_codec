@@ -9,7 +9,7 @@ int main(int argc, char** argv)
     uint64_t timestamp = 0LL;
 
     if (argc < 3 || argc > 6) {
-        std::cerr << "Usage: " << argv[0] << "pointcloudfile.ply compressedfile.cwicpc [timestamp [octree_depth [jpeg_qp]]]" << std::endl;
+        std::cerr << "Usage: " << argv[0] << " pointcloudfile.ply compressedfile.cwicpc [timestamp [octree_depth [jpeg_qp]]]" << std::endl;
         return 2;
     }
 
