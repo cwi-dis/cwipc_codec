@@ -62,6 +62,9 @@ target_link_libraries(cwipc_codec
 	PRIVATE cloud_codec_v2 ${PCL_LIBRARIES} ${Boost_LIBRARIES} ${JPEG_Turbo_LIBRARY})
 
 install(TARGETS cwipc_codec
+	RUNTIME_DEPENDENCIES
+	PRE_EXCLUDE_REGEXES "api-ms-" "ext-ms-"
+	POST_EXCLUDE_REGEXES ".*system32/.*\\.dll"
     EXPORT cwipc_codec
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -81,7 +84,7 @@ install(EXPORT cwipc_codec
 
 if(WIN32)
 	# Copy the dependent DLLs that cmake/vcpkg have created
-	install(FILES $<TARGET_RUNTIME_DLLS:cwipc_codec> DESTINATION ${CMAKE_INSTALL_BINDIR})
+	#install(FILES $<TARGET_RUNTIME_DLLS:cwipc_codec> DESTINATION ${CMAKE_INSTALL_BINDIR})
 	# Copy the PDB file, if it exists
 	install(FILES $<TARGET_PDB_FILE:cwipc_codec> DESTINATION ${CMAKE_INSTALL_BINDIR} OPTIONAL)
 endif()
