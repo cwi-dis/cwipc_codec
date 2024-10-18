@@ -61,7 +61,7 @@ target_link_libraries(cwipc_codec
 	PUBLIC cwipc_util 
 	PRIVATE cloud_codec_v2 ${PCL_LIBRARIES} ${Boost_LIBRARIES} ${JPEG_Turbo_LIBRARY})
 
-if(WINDOWS)
+if(WIN32)
 	install(TARGETS cwipc_codec
 		RUNTIME_DEPENDENCIES
 		PRE_EXCLUDE_REGEXES "api-ms-" "ext-ms-"
