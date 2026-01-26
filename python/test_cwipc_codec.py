@@ -5,34 +5,12 @@ import os
 import sys
 import tempfile
 
-if 0:
-    # This code can be used to debug the C++ code in XCode:
-    # - build for XCode with cmake
-    # - build the cwipc_util project
-    # - Fix the pathname for the dylib
-    # - run `python3 test_cwipc_util`
-    # - Attach to python in the XCode debugger
-    # - press return to python3.
-    import _cwipc_codec
-    _cwipc_codec.cwipc_codec_dll_load('/Users/jack/src/VRTogether/cwipc_codec/build-xcode/lib/Debug/libcwipc_codec.dylib')
-    print('Type return after attaching in XCode debugger - ')
-    sys.stdin.readline()
-
-#
-# Windows search path is horrible. Work around it for testing with an environment variable
-#
-if 'CWIPC_TEST_DLL' in os.environ:
-	filename = os.environ['CWIPC_TEST_DLL']
-	dllobj = _cwipc_codec.cwipc_codec_dll_load(filename)
 #
 # Find directories for test inputs and outputs
 #
 _thisdir=os.path.dirname(os.path.abspath(__file__))
 _topdir=os.path.dirname(_thisdir)
 TEST_FIXTURES_DIR=os.path.join(_topdir, "tests", "fixtures")
-TEST_OUTPUT_DIR=os.path.join(TEST_FIXTURES_DIR, "output")
-if not os.access(TEST_OUTPUT_DIR, os.W_OK):
-    TEST_OUTPUT_DIR=tempfile.mkdtemp('cwipc_codec_test')
 PLY_FILENAME=os.path.join(TEST_FIXTURES_DIR, "input", "pcl_frame1.ply")
 COMPRESSED_FILENAME=os.path.join(TEST_FIXTURES_DIR, "compressed", "pcl_frame1.cwicpc")
 
