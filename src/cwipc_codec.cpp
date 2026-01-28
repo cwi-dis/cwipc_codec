@@ -494,8 +494,10 @@ public:
     }
 
     cwipc_encoder *addencoder(int version, cwipc_encoder_params* params, char **errorMessage) {
+        cwipc_log_set_errorbuf(errorMessage);
         if (m_voxelsize >= 0 && m_voxelsize != params->voxelsize) {
-            *errorMessage = (char *)"cwipc_encodergroup: voxelsize must be the same for all encoders";
+            cwipc_log(CWIPC_LOG_LEVEL_ERROR, "cwipc_encodergroup", "all encoders in a group must have the same voxelsize");
+            cwipc_log_set_errorbuf(NULL);
             return NULL;
         }
 
@@ -503,6 +505,10 @@ public:
         cwipc_encoder_impl *newEncoder = (cwipc_encoder_impl *)cwipc_new_encoder(version, params, errorMessage, CWIPC_API_VERSION);
 
         if (newEncoder == NULL) {
+            if (errorMessage && *errorMessage == NULL) {
+                cwipc_log(CWIPC_LOG_LEVEL_ERROR, "cwipc_encodergroup::addencoder", "unspecified error");
+            }
+            cwipc_log_set_errorbuf(NULL);
             return NULL;
         }
 
@@ -519,6 +525,7 @@ public:
         }
 
         m_encoders.push_back(newEncoder);
+        cwipc_log_set_errorbuf(NULL);
         return newEncoder;
     }
 
@@ -663,7 +670,7 @@ cwipc_encoder* cwipc_new_encoder(int version, cwipc_encoder_params *params, char
 
         return NULL;
     }
-
+    cwipc_log_set_errorbuf(errorMessage);
     if (params == NULL) {
         static cwipc_encoder_params dft = {false, 1, 1.0, 9, 85, 16, 0, 0, 0};
         params = &dft;
@@ -671,26 +678,27 @@ cwipc_encoder* cwipc_new_encoder(int version, cwipc_encoder_params *params, char
 
     // Check parameters for this release
     if (params->do_inter_frame) {
-        if (errorMessage) {
-            *errorMessage = (char*)"cwipc_new_encoder: do_inter_frame must be false for this version";
-        }
-
+        cwipc_log(CWIPC_LOG_LEVEL_ERROR, "cwipc_new_encoder", "inter-frame encoding not supported in this version");
+        cwipc_log_set_errorbuf(NULL);
         return NULL;
     }
 
     if (params->gop_size != 1) {
-        if (errorMessage) {
-            *errorMessage = (char*)"cwipc_new_encoder: gop_size must be 1 for this version";
-        }
-
+        cwipc_log(CWIPC_LOG_LEVEL_ERROR, "cwipc_new_encoder", "gop_size > 1 not supported in this version");
+        cwipc_log_set_errorbuf(NULL);
         return NULL;
     }
-
+    cwipc_encoder *rv = nullptr;
     if (version == CWIPC_ENCODER_PARAM_VERSION && params->n_parallel > 1) {
-        return new cwipc_multithreaded_encoder_impl(params);
+        rv = new cwipc_multithreaded_encoder_impl(params);
+    } else {
+        rv = new cwipc_encoder_impl(params);
     }
-
-    return new cwipc_encoder_impl(params);
+    if (rv == nullptr && errorMessage && *errorMessage == NULL) {
+        cwipc_log(CWIPC_LOG_LEVEL_ERROR, "cwipc_new_encoder", "failed without error message");
+    }
+    cwipc_log_set_errorbuf(NULL);
+    return rv;
 }
 
 void cwipc_encoder_free(cwipc_encoder *obj) {
@@ -735,8 +743,12 @@ cwipc_encodergroup *cwipc_new_encodergroup(char **errorMessage, uint64_t apiVers
 
         return NULL;
     }
-
-    return new cwipc_encodergroup_impl();
+    cwipc_encodergroup *rv = new cwipc_encodergroup_impl();
+    if (rv == nullptr && errorMessage && *errorMessage == NULL) {
+        cwipc_log(CWIPC_LOG_LEVEL_ERROR, "cwipc_new_encodergroup", "unspecified error");
+    }
+    cwipc_log_set_errorbuf(NULL);
+    return rv;
 }
 
 void cwipc_encodergroup_free(cwipc_encodergroup *obj) {
@@ -766,7 +778,12 @@ cwipc_decoder* cwipc_new_decoder(char **errorMessage, uint64_t apiVersion) {
         return NULL;
     }
 
-    return new cwipc_decoder_impl();
+    cwipc_decoder *rv = new cwipc_decoder_impl();
+    if (rv == nullptr && errorMessage && *errorMessage == NULL) {
+        cwipc_log(CWIPC_LOG_LEVEL_ERROR, "cwipc_new_decoder", "unspecified error");
+    }
+    cwipc_log_set_errorbuf(NULL);
+    return rv;
 }
 
 void cwipc_decoder_feed(cwipc_decoder *obj, void *buffer, size_t bufferSize) {
