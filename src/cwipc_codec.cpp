@@ -13,10 +13,11 @@
 #define _CWIPC_CODEC_EXPORT
 #endif
 
-// #define SET_THREAD_NAME
+#define SET_THREAD_NAME
 
 #include "cwipc_codec_config.h"
 #include "cwipc_util/api_pcl.h"
+#include "cwipc_util/internal/logging.hpp"
 #include "cwipc_codec/api.h"
 #include "readerwriterqueue.h"
 #include <pcl/point_cloud.h>
@@ -113,13 +114,11 @@ public:
             std::string name = "pc-encoder tile=" + std::to_string(this->m_params.tilenumber) + " depth=" + std::to_string(this->m_params.octree_bits);
             pthread_setname_np(name.c_str());
 #endif
-            bool ok = true;
             while (m_alive) {
+                bool ok = this->_run_single_encode();
                 if (!ok) {
-                    std::cerr << "cwipc_encoder: threaded encoder failure" << std::endl;
+                    cwipc_log(CWIPC_LOG_LEVEL_ERROR, "cwipc_encoder", "threaded encoder failure");
                 }
-
-                ok = this->_run_single_encode();
             }
         });
 
@@ -128,13 +127,11 @@ public:
             std::string name = "pc-tilefilter tile=" + std::to_string(this->m_params.tilenumber) + " depth=" + std::to_string(this->m_params.octree_bits);
             pthread_setname_np(name.c_str());
 #endif
-            bool ok = true;
             while (m_alive) {
+                bool ok = this->_run_single_tilefilter();
                 if (!ok) {
-                    std::cerr << "cwipc_encoder: threaded tilefilter failure" << std::endl;
-                }
-
-                this->_run_single_tilefilter();
+                    cwipc_log(CWIPC_LOG_LEVEL_ERROR, "cwipc_encoder", "threaded tilefilter failure");
+                }   
             }
         });
     }
@@ -161,7 +158,7 @@ public:
 
     void feed(cwipc *pc) {
         if (!m_alive) {
-            std::cerr << "cwipc_encoder: feed() after close()" << std::endl;
+            cwipc_log(CWIPC_LOG_LEVEL_WARNING, "cwipc_encoder", "feed() called after close()");
             return;
         }
 
@@ -180,17 +177,17 @@ public:
 
             ok = m_queue_tilefilter.try_enqueue(pc);
             if (!ok) {
-                std::cerr << "cwipc_encoder: unthreaded try_enqueue failed" << std::endl;
+                cwipc_log(CWIPC_LOG_LEVEL_ERROR, "cwipc_encoder", "unthreaded try_enqueue failed");
             }
 
             ok = _run_single_tilefilter();
             if (!ok) {
-                std::cerr << "cwipc_encoder: unthreaded tilefilter failure" << std::endl;
+                cwipc_log(CWIPC_LOG_LEVEL_ERROR, "cwipc_encoder", "unthreaded tilefilter failure");
             }
 
             ok = _run_single_encode();
             if (!ok) {
-                std::cerr << "cwipc_encoder: unthreaded encoder failure" << std::endl;
+                cwipc_log(CWIPC_LOG_LEVEL_ERROR, "cwipc_encoder", "unthreaded encode failure");
             }
         }
     }
@@ -262,7 +259,7 @@ private:
             newpc = cwipc_tilefilter(pc, m_params.tilenumber);
 
             if (newpc == NULL) {
-                std::cerr << "cwipc_encoder: tilefilter failed" << std::endl;
+                cwipc_log(CWIPC_LOG_LEVEL_ERROR, "cwipc_encoder", "tilefilter failed");
                 return false;
             }
         } else {
@@ -479,7 +476,7 @@ public:
             newpc = cwipc_downsample(pc, m_voxelsize);
 
             if (newpc == NULL) {
-                std::cerr << "cwipc_encodergroup: cwipc_downsample failed" << std::endl;
+                cwipc_log(CWIPC_LOG_LEVEL_ERROR, "cwipc_encodergroup", "downsampling failed");
                 return;
             }
         } else {
@@ -562,7 +559,7 @@ public:
 
     void feed(void *buffer, size_t bufferSize) {
         if (!m_alive) {
-            std::cerr << "cwipc_decoder: feed() called after close()" << std::endl;
+            cwipc_log(CWIPC_LOG_LEVEL_WARNING, "cwipc_decoder", "feed() called after close()");
             return;
         }
 
