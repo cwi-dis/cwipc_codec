@@ -29,23 +29,9 @@ file(COPY test_cwipc_codec.py DESTINATION ${CMAKE_PYWHEELS_OUTPUT_DIRECTORY})
 install(FILES test_cwipc_codec.py DESTINATION ${CMAKE_PYWHEELS_INSTALL_DIRECTORY})
 cwipc_install_wheel(NAME "cwipc_codec" WHEELDIR ${CMAKE_PYWHEELS_OUTPUT_DIRECTORY})
 
-#
-# Testing.
-#
-
-# setup test environment (installs module into venv)
-
-#add_test(NAME xxxjack_python_setup_cwipc_codec
-#	COMMAND ${Python3_EXECUTABLE} setup.py install WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-#	)
-add_test(NAME _python_setup_cwipc_codec
-	COMMAND ${Python3_EXECUTABLE} -m pip install --no-cache-dir --upgrade --find-links=${CMAKE_PYWHEELS_OUTPUT_DIRECTORY} cwipc_codec
-	)
-set_tests_properties(_python_setup_cwipc_codec PROPERTIES FIXTURES_SETUP venv RUN_SERIAL TRUE)
-
 
 add_test(NAME cwipc_codec_python_tests
 	COMMAND ${Python3_EXECUTABLE} ${CMAKE_PYWHEELS_OUTPUT_DIRECTORY}/test_cwipc_codec.py
 	WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
 )
-cwipc_python_test(TEST cwipc_codec_python_tests FIXTURES_REQUIRED venv)
+cwipc_python_test(TEST cwipc_codec_python_tests FIXTURES_REQUIRED venv_with_cwipc)
