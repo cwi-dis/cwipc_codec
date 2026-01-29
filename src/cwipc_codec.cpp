@@ -13,7 +13,7 @@
 #define _CWIPC_CODEC_EXPORT
 #endif
 
-#define SET_THREAD_NAME
+#undef SET_THREAD_NAME
 
 #include "cwipc_codec_config.h"
 #include "cwipc_util/api_pcl.h"
