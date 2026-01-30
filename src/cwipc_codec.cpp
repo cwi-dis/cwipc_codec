@@ -539,20 +539,33 @@ public:
     cwipc_decoder_impl() : m_result(NULL), m_decoder_V2_(nullptr), m_alive(true) {}
     ~cwipc_decoder_impl() {}
 
-    void free() {
+    virtual void free() override final {
         m_alive = false;
         m_result_cv.notify_all();
     }
 
-    void close() {
+    virtual void close() override final {
         m_alive = false;
     }
 
-    bool eof() {
+    virtual bool start() override final {
+        // Decoder liveness is managed via feed() and close()
+        return true;
+    }
+
+    virtual void stop() override final {
+        m_alive = false;
+    }
+
+    virtual bool seek(uint64_t timestamp) override final {
+        return false;
+    }
+
+    virtual bool eof() override final {
         return !m_alive;
     }
 
-    bool available(bool wait) {
+    virtual bool available(bool wait) override final {
         std::unique_lock<std::mutex> lock(m_result_mutex);
 
         if (wait) {
@@ -564,7 +577,7 @@ public:
         return m_result != NULL;
     }
 
-    void feed(void *buffer, size_t bufferSize) {
+    virtual void feed(void *buffer, size_t bufferSize) override final {
         if (!m_alive) {
             cwipc_log(CWIPC_LOG_LEVEL_WARNING, "cwipc_decoder", "feed() called after close()");
             return;
@@ -601,7 +614,7 @@ public:
         m_result_cv.notify_one();
     }
 
-    cwipc* get() {
+    virtual cwipc* get() override final {
         std::lock_guard<std::mutex> lock(m_result_mutex);
         cwipc *rv = m_result;
         m_result = NULL;
