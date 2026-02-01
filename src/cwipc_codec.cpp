@@ -697,7 +697,7 @@ cwipc_encoder* cwipc_new_encoder(int version, cwipc_encoder_params *params, char
     }
 
     if (params->gop_size != 1) {
-        cwipc_log(CWIPC_LOG_LEVEL_ERROR, "cwipc_new_encoder", "gop_size > 1 not supported in this version");
+        cwipc_log(CWIPC_LOG_LEVEL_ERROR, "cwipc_new_encoder", "gop_size != 1 not supported in this version");
         cwipc_log_set_errorbuf(NULL);
         return NULL;
     }
