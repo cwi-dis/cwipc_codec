@@ -548,15 +548,6 @@ public:
         m_alive = false;
     }
 
-    virtual bool start() override final {
-        // Decoder liveness is managed via feed() and close()
-        return true;
-    }
-
-    virtual void stop() override final {
-        m_alive = false;
-    }
-
     virtual bool seek(uint64_t timestamp) override final {
         return false;
     }
