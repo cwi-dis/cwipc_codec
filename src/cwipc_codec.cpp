@@ -167,8 +167,7 @@ public:
                 m_queued_pc->free();
             }
 
-            m_queued_pc = cwipc_from_pcl(pc->access_pcl_pointcloud(), pc->timestamp(), nullptr, CWIPC_API_VERSION);
-            m_queued_pc->_set_cellsize(pc->cellsize());
+            m_queued_pc = pc;
 
             pc = nullptr;
             m_queue_tilefilter.enqueue(m_queued_pc);
@@ -257,17 +256,14 @@ private:
         // Apply tile filtering, if needed
         if (m_params.tilenumber) {
             newpc = cwipc_tilefilter(pc, m_params.tilenumber);
-
+            pc->free();
             if (newpc == NULL) {
                 cwipc_log(CWIPC_LOG_LEVEL_ERROR, "cwipc_encoder", "tilefilter failed");
                 return false;
             }
         } else {
-            // Make shallow clone of pc
-            newpc = cwipc_from_pcl(pc->access_pcl_pointcloud(), pc->timestamp(), nullptr, CWIPC_API_VERSION);
-            newpc->_set_cellsize(pc->cellsize());
+            newpc = pc;
         }
-
         pc = nullptr; // Ensure we don't access this anymore.
         m_queue_encoder.enqueue(newpc);
 
