@@ -4,7 +4,7 @@ import ctypes.util
 import warnings
 from typing import Optional, Any,Union
 from cwipc.util import CwipcError, CWIPC_API_VERSION, cwipc_pointcloud_wrapper, cwipc_source_wrapper
-from cwipc.util import cwipc_p, cwipc_source_p
+from cwipc.util import cwipc_pointcloud_p, cwipc_source_p
 from cwipc.util import _cwipc_dll_search_path_collection # type: ignore
 
 #
@@ -70,7 +70,7 @@ def cwipc_codec_dll_load(libname : Optional[str]=None) -> ctypes.CDLL:
     _cwipc_codec_dll_reference.cwipc_encoder_eof.restype = ctypes.c_bool
     _cwipc_codec_dll_reference.cwipc_encoder_at_gop_boundary.argtypes = [cwipc_encoder_p]
     _cwipc_codec_dll_reference.cwipc_encoder_at_gop_boundary.restype = ctypes.c_bool
-    _cwipc_codec_dll_reference.cwipc_encoder_feed.argtypes = [cwipc_encoder_p, cwipc_p]
+    _cwipc_codec_dll_reference.cwipc_encoder_feed.argtypes = [cwipc_encoder_p, cwipc_pointcloud_p]
     _cwipc_codec_dll_reference.cwipc_encoder_feed.restype = None
     _cwipc_codec_dll_reference.cwipc_encoder_get_encoded_size.argtypes = [cwipc_encoder_p]
     _cwipc_codec_dll_reference.cwipc_encoder_get_encoded_size.restype = ctypes.c_size_t
@@ -83,7 +83,7 @@ def cwipc_codec_dll_load(libname : Optional[str]=None) -> ctypes.CDLL:
     _cwipc_codec_dll_reference.cwipc_new_encodergroup.restype = cwipc_encodergroup_p
     _cwipc_codec_dll_reference.cwipc_encodergroup_addencoder.argtypes = [cwipc_encodergroup_p, ctypes.c_int, ctypes.POINTER(cwipc_encoder_params), ctypes.POINTER(ctypes.c_char_p)]
     _cwipc_codec_dll_reference.cwipc_encodergroup_addencoder.restype = cwipc_encoder_p
-    _cwipc_codec_dll_reference.cwipc_encodergroup_feed.argtypes = [cwipc_encodergroup_p, cwipc_p]
+    _cwipc_codec_dll_reference.cwipc_encodergroup_feed.argtypes = [cwipc_encodergroup_p, cwipc_pointcloud_p]
     _cwipc_codec_dll_reference.cwipc_encodergroup_feed.restype = None
     _cwipc_codec_dll_reference.cwipc_encodergroup_close.argtypes = [cwipc_encodergroup_p]
     _cwipc_codec_dll_reference.cwipc_encodergroup_close.restype = None
