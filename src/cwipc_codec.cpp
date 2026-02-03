@@ -156,7 +156,7 @@ public:
         return m_remaining_frames_in_gop <= 0;
     }
 
-    void feed(cwipc *pc) {
+    void feed(cwipc_pointcloud *pc) {
         if (!m_alive) {
             cwipc_log(CWIPC_LOG_LEVEL_WARNING, "cwipc_encoder", "feed() called after close()");
             return;
@@ -245,14 +245,14 @@ private:
     }
 
     bool _run_single_tilefilter() {
-        cwipc *pc = nullptr;
+        cwipc_pointcloud *pc = nullptr;
         m_queue_tilefilter.wait_dequeue(pc);
 
         if (pc == nullptr) {
             return false;
         }
 
-        cwipc *newpc = nullptr;
+        cwipc_pointcloud *newpc = nullptr;
 
         // Apply tile filtering, if needed
         if (m_params.tilenumber) {
@@ -275,7 +275,7 @@ private:
     }
 
     bool _run_single_encode() {
-        cwipc *newpc = nullptr;
+        cwipc_pointcloud *newpc = nullptr;
         m_queue_encoder.wait_dequeue(newpc);
 
         if (newpc == nullptr) {
@@ -344,12 +344,12 @@ private:
     std::condition_variable m_result_cv;
     int m_remaining_frames_in_gop;
     bool m_alive;
-    moodycamel::BlockingReaderWriterQueue<cwipc *> m_queue_tilefilter;
-    moodycamel::BlockingReaderWriterQueue<cwipc *> m_queue_encoder;
+    moodycamel::BlockingReaderWriterQueue<cwipc_pointcloud *> m_queue_tilefilter;
+    moodycamel::BlockingReaderWriterQueue<cwipc_pointcloud *> m_queue_encoder;
     std::thread* m_thread_tilefilter;
     std::thread* m_thread_encoder;
     bool m_use_threads;
-    cwipc *m_queued_pc;
+    cwipc_pointcloud *m_queued_pc;
 };
 
 class cwipc_multithreaded_encoder_impl : public cwipc_encoder {
@@ -390,7 +390,7 @@ public:
         for (auto enc : m_encoders) enc->close();
     }
 
-    void feed(cwipc *pc) {
+    void feed(cwipc_pointcloud *pc) {
         std::lock_guard<std::mutex> lock(m_next_in_mutex);
         m_encoders[m_next_in]->feed(pc);
         m_next_in = (m_next_in+1) % m_nencoder;
@@ -469,8 +469,8 @@ public:
         }
     }
 
-    void feed(cwipc *pc) {
-        cwipc *newpc = NULL;
+    void feed(cwipc_pointcloud *pc) {
+        cwipc_pointcloud *newpc = NULL;
 
         if (m_voxelsize > 0) {
             newpc = cwipc_downsample(pc, m_voxelsize);
@@ -605,9 +605,9 @@ public:
         m_result_cv.notify_one();
     }
 
-    virtual cwipc* get() override final {
+    virtual cwipc_pointcloud* get() override final {
         std::lock_guard<std::mutex> lock(m_result_mutex);
-        cwipc *rv = m_result;
+        cwipc_pointcloud *rv = m_result;
         m_result = NULL;
 
         return rv;
@@ -647,7 +647,7 @@ private:
         );
     }
 
-    cwipc *m_result;
+    cwipc_pointcloud *m_result;
     std::mutex m_result_mutex;
     std::condition_variable m_result_cv;
     pcl::shared_ptr<cwipc_pointcloud_codec > m_decoder_V2_;
@@ -717,7 +717,7 @@ bool cwipc_encoder_eof(cwipc_encoder *obj) {
     return obj->eof();
 }
 
-void cwipc_encoder_feed(cwipc_encoder *obj, cwipc* pc) {
+void cwipc_encoder_feed(cwipc_encoder *obj, cwipc_pointcloud* pc) {
     obj->feed(pc);
 }
 
@@ -763,7 +763,7 @@ cwipc_encoder *cwipc_encodergroup_addencoder(cwipc_encodergroup *obj, int versio
     return obj->addencoder(version, params, errorMessage);
 }
 
-void cwipc_encodergroup_feed(cwipc_encodergroup *obj, cwipc* pc) {
+void cwipc_encodergroup_feed(cwipc_encodergroup *obj, cwipc_pointcloud* pc) {
     return obj->feed(pc);
 }
 

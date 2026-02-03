@@ -19,14 +19,14 @@
 char *progname;
 char *filename;
 
-cwipc* readpc(int index) {
+cwipc_pointcloud* readpc(int index) {
     //
     // Read pointcloud file
     //
     char* errorMessage = NULL;
     char namebuf[1024];
     snprintf(namebuf, sizeof(namebuf), filename, index);
-    cwipc *pc;
+    cwipc_pointcloud *pc;
 
     if (strcmp(namebuf+strlen(namebuf)-4, ".ply") == 0) {
         pc = cwipc_read(namebuf, 0LL, &errorMessage, CWIPC_API_VERSION);
@@ -43,7 +43,7 @@ cwipc* readpc(int index) {
 }
 
 int measure(std::vector<int>& all_octree_bits, std::vector<int>& all_jpeg_quality, std::vector<int> all_tilenumber) {
-    cwipc* pc = nullptr;
+    cwipc_pointcloud* pc = nullptr;
     pc = readpc(0);
 
     std::cerr << progname << ": Read pointcloud, " << pc->count() << " points, " << pc->get_uncompressed_size() << " bytes (uncompressed)" << std::endl;

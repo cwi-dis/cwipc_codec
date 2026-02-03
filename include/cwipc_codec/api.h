@@ -48,7 +48,7 @@ struct cwipc_encoder_params
 /** \brief Pointcloud encoder, abstract C++ interface.
  *
  * This interface is provided by pointcloud compressors. The caller
- * feeds in pointclouds (as `cwipc` objects) and it returns memory blocks
+ * feeds in pointclouds (as `cwipc_pointcloud` objects) and it returns memory blocks
  * with compressed pointcloud data.
  */
 class cwipc_encoder
@@ -57,7 +57,7 @@ public:
     /** \brief Destructor. Does not free underlying encoder.
      * 
      * You must call free() before calling the destructor (unless you have passed
-     * the cwipc object across an implementation language boundary and a reference
+     * the cwipc_pointcloud object across an implementation language boundary and a reference
      * may still be held there).
      */ 
     virtual ~cwipc_encoder() {}
@@ -78,7 +78,7 @@ public:
      * Do *not* call this method an on encoder that is part of an encoder group,
      * call the group feed() method in stead.
      */
-    virtual void feed(cwipc *pc) = 0;
+    virtual void feed(cwipc_pointcloud *pc) = 0;
 
     /** \brief Signal end of stream.
      *
@@ -127,7 +127,7 @@ public:
 /** \brief Pointcloud multiencoder, abstract C++ interface.
  *
  * This interface is provided by group of pointcloud compressors. The caller
- * feeds in pointclouds (as `cwipc` objects). Each pointcloud is fed to every
+ * feeds in pointclouds (as `cwipc_pointcloud` objects). Each pointcloud is fed to every
  * encoder in the group, and every encoder returns the compressed pointcloud
  * data.
  * 
@@ -154,7 +154,7 @@ public:
      *
      * This call presents each encoder in the group with a new pointcloud to encode.
      */
-    virtual void feed(cwipc *pc) = 0;
+    virtual void feed(cwipc_pointcloud *pc) = 0;
     
     /** \brief Signal end of stream.
      *
@@ -177,7 +177,7 @@ public:
  *
  * This interface is provided by pointcloud decompressors. The caller
  * feeds in memory blocks with compressed pointcloud data. The interface
- * adheres to the `cwipc_source` interface and produces `cwipc` objects on the
+ * adheres to the `cwipc_source` interface and produces `cwipc_pointcloud` objects on the
  * output side.
  */
 class cwipc_decoder : public cwipc_source
@@ -187,7 +187,7 @@ public:
     virtual void free() = 0;
     virtual bool eof() = 0;
     virtual bool available(bool wait) = 0;
-    virtual cwipc *get() = 0;
+    virtual cwipc_pointcloud *get() = 0;
 
     /** \brief Feed compressed data into the decoder.
      * \param buffer Pointer to the data buffer containing the compressed pointcloud data.
@@ -195,7 +195,7 @@ public:
      *
      * Use this call to pass a new compressed pointcloud into the decoder.
      * After decompression `available()` will return true, and `get()` can be
-     * used to obtain the cwipc pointcloud data.
+     * used to obtain the cwipc_pointcloud pointcloud data.
      *
      * The caller remains the owner of the buffer, i.e. after feed returns the caller can
      * free the buffer.
@@ -267,7 +267,7 @@ _CWIPC_CODEC_EXPORT bool cwipc_encoder_available(cwipc_encoder *obj, bool wait);
  *
  * This call presents the encoder with a new pointcloud to encode.
  */
-_CWIPC_CODEC_EXPORT void cwipc_encoder_feed(cwipc_encoder *obj, cwipc* pc);
+_CWIPC_CODEC_EXPORT void cwipc_encoder_feed(cwipc_encoder *obj, cwipc_pointcloud* pc);
 
 /** \brief Signal end of stream (C interface).
  *
@@ -336,7 +336,7 @@ _CWIPC_CODEC_EXPORT cwipc_encoder *cwipc_encodergroup_addencoder(cwipc_encodergr
  *
  * This call presents the group of encoders with a new pointcloud to encode.
  */
-_CWIPC_CODEC_EXPORT void cwipc_encodergroup_feed(cwipc_encodergroup *obj, cwipc* pc);
+_CWIPC_CODEC_EXPORT void cwipc_encodergroup_feed(cwipc_encodergroup *obj, cwipc_pointcloud* pc);
 
 /** \brief Signal end of stream (C interface).
  *
@@ -369,7 +369,7 @@ _CWIPC_CODEC_EXPORT cwipc_decoder* cwipc_new_decoder(char **errorMessage, uint64
  *
  * Use this call to pass a new compressed pointcloud into the decoder.
  * After decompression `available()` will return true, and `get()` can be
- * used to obtain the cwipc pointcloud data.
+ * used to obtain the cwipc_pointcloud pointcloud data.
  */
 _CWIPC_CODEC_EXPORT void cwipc_decoder_feed(cwipc_decoder *obj, void *buffer, size_t bufferSize);
 

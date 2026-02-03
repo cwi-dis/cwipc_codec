@@ -50,10 +50,10 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    cwipc *pc = decoder->get();
+    cwipc_pointcloud *pc = decoder->get();
 
     if (pc == NULL) {
-        std::cerr << argv[0] << ": Decoder did not return cwipc" << std::endl;
+        std::cerr << argv[0] << ": Decoder did not return cwipc_pointcloud" << std::endl;
         return 1;
     }
 
