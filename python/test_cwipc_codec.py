@@ -21,7 +21,7 @@ class TestApi(unittest.TestCase):
         encoder = _cwipc_codec.cwipc_new_encoder()
         self.assertFalse(encoder.eof())
         self.assertFalse(encoder.available(False))
-        encoder.free()
+        del encoder
         
     def test_cwipc_new_encoder_bad_parameters(self):
         """Do we get exceptions when creating an encoder with unimplemented parameters?"""
@@ -40,14 +40,12 @@ class TestApi(unittest.TestCase):
         encoder.close()
         self.assertTrue(encoder.eof())
         self.assertFalse(encoder.available(True))
-        encoder.free()
 
     def test_cwipc_new_decoder(self):
         """Can we create and free a cwipc_decoder object"""
         decoder = _cwipc_codec.cwipc_new_decoder()
         self.assertFalse(decoder.eof())
         self.assertFalse(decoder.available(False))
-        decoder.free()
 
     def test_cwipc_decoder_close(self):
         """Can we close a decoder"""
@@ -57,7 +55,6 @@ class TestApi(unittest.TestCase):
         decoder.close()
         self.assertTrue(decoder.eof())
         self.assertFalse(decoder.available(True))
-        decoder.free()
 
     def test_cwipc_encoder_plyfile(self):
         """Test that we can encode a PLY file and the available flags behaves correct"""
@@ -71,8 +68,6 @@ class TestApi(unittest.TestCase):
         data = encoder.get_bytes()
         self.assertNotEqual(len(data), 0)
         self.assertFalse(encoder.available(False))
-        encoder.free()
-        pc.free()        
 
     @unittest.skip('unexpected difference')
     def test_cwipc_encoder_plyfile_multiple_same(self):
@@ -85,8 +80,6 @@ class TestApi(unittest.TestCase):
         data_two = encoder.get_bytes()
         self.assertEqual(data_one, data_two)
                 
-        encoder.free()
-        pc.free()
 
     def test_cwipc_encoder_plyfile_multiple_different(self):
         """Test that we can encode a ply file multiple times and the results are the same, and different for different timestamps"""
@@ -98,10 +91,6 @@ class TestApi(unittest.TestCase):
         encoder.feed(pc3)
         data_three = encoder.get_bytes()
         self.assertNotEqual(data_one, data_three)
-        
-        encoder.free()
-        pc.free()
-        pc3.free()
         
     def test_cwipc_encoder_octree_depth(self):
         """Test that octree_bits encoder param makes a significant difference"""
@@ -124,8 +113,6 @@ class TestApi(unittest.TestCase):
             decoded_npoints = len(points)
             decoded_npoints_per_depth[depth] = decoded_npoints
             cellsize_per_depth[depth] = decoded_pc.cellsize()
-            encoder.free()
-            decoded_pc.free()
             depth = depth - 1
         # Some sanity checks
         for i in range(11):
@@ -136,7 +123,6 @@ class TestApi(unittest.TestCase):
             self.assertLessEqual(decoded_npoints_per_depth[0], 16)
         else:
             self.assertLessEqual(decoded_npoints_per_depth[0], decoded_npoints_per_depth[11]/10000)
-        pc.free()
         
     def test_cwipc_encoder_jpeg_quality(self):
         """Test that jpeg_quality encoder param makes a difference"""
@@ -152,9 +138,7 @@ class TestApi(unittest.TestCase):
             if prev_size != None:
                 self.assertLess(encoded_size, prev_size)
             prev_size = encoded_size
-            encoder.free()
             quality = quality - 10
-        pc.free()
         
     def test_cwipc_decode_cwicpc(self):
         """Test that we can decode a cwicpc compressed pointcloud and get an acceptable cwipc"""
@@ -169,8 +153,6 @@ class TestApi(unittest.TestCase):
         assert pc # Only to keep linters happy
         self.assertFalse(decoder.available(False))
         self._verify_pointcloud(pc)
-        decoder.free()
-        pc.free()
         
     def test_cwipc_codec_roundtrip(self):
         """Check that we can roundtrip encoder-decoder and get at most as many points back"""
@@ -189,10 +171,6 @@ class TestApi(unittest.TestCase):
         points2 = pc2.get_points()
         self.assertGreaterEqual(len(points), len(points2))
         self.assertEqual(pc2.timestamp(), timestamp)
-        encoder.free()
-        decoder.free()
-        pc.free()     
-        pc2.free()   
 
     def test_cwipc_codec_roundtrip_empty(self):
         """Check that we can roundtrip an empty pointcloud"""
@@ -212,10 +190,6 @@ class TestApi(unittest.TestCase):
         self.assertEqual(len(points), 0)
         self.assertEqual(len(points2), 0)
         self.assertEqual(pc2.timestamp(), timestamp)
-        encoder.free()
-        decoder.free()
-        pc.free()     
-        pc2.free()   
                 
     def test_cwipc_multiencoder_octree_depth(self):
         """Test that a multiencoder setup for 2 octree depths returns sensible pointclouds"""
@@ -237,8 +211,6 @@ class TestApi(unittest.TestCase):
         self.assertLess(len(data_low), len(data_high))
         
         # xxxjack todo: decompress both and compare
-        group.free()
-        pc_orig.free() 
 
     def test_cwipc_parallel_encoder(self):
         """Test that a parallel encoder returns the same compressed data as a non-parallel one"""       
@@ -256,13 +228,10 @@ class TestApi(unittest.TestCase):
             enc2.feed(pc)
             self.assertTrue(enc1.available(True))
             self.assertTrue(enc2.available(True))
-            pc.free()
-            pc = None
+
             out1 = enc1.get_bytes()
             out2 = enc2.get_bytes()
             self.assertEqual(out1, out2)
-        enc1.free()
-        enc2.free()
     
     def _verify_pointcloud(self, pc):
         points = pc.get_points()

@@ -6,6 +6,7 @@ from typing import Optional, Any,Union
 from cwipc.util import CwipcError, CWIPC_API_VERSION, cwipc_pointcloud_wrapper, cwipc_source_wrapper
 from cwipc.util import cwipc_pointcloud_p, cwipc_source_p
 from cwipc.util import _cwipc_dll_search_path_collection # type: ignore
+from cwipc.util import cwipc_log_default_callback, CWIPC_LOG_LEVEL_WARNING
 
 #
 # This is a workaround for the change in DLL loading semantics on Windows since Python 3.8
@@ -115,21 +116,46 @@ CWIPC_ENCODER_PARAM_VERSION = 0x20220607
 
 class cwipc_encoder_wrapper:
     _cwipc_encoder : Optional[cwipc_encoder_p]
+    _must_be_freed : bool
 
     def __init__(self, _cwipc_encoder : Optional[cwipc_encoder_p]):
         if _cwipc_encoder != None:
             assert isinstance(_cwipc_encoder, cwipc_encoder_p)
         self._cwipc_encoder = _cwipc_encoder
-        
+        self._must_be_freed = True
+
+    def __del__(self):
+        if self._must_be_freed:
+            self.free(force=True)
+
     def _as_cwipc_encoder_p(self) -> cwipc_encoder_p:
         assert self._cwipc_encoder
         return self._cwipc_encoder
         
-    def free(self) -> None:
-        if self._cwipc_encoder:
+    def free(self, force:bool = False) -> None:
+        if self._cwipc_encoder and self._must_be_freed:
+            if not force:
+                cwipc_log_default_callback(CWIPC_LOG_LEVEL_WARNING, b'cwipc_encoder_wrapper.free() called explicitly.')
             cwipc_codec_dll_load().cwipc_encoder_free(self._as_cwipc_encoder_p())
         self._cwipc_encoder = None
+        self._must_be_freed = False
 
+    def detach(self) -> 'cwipc_encoder_wrapper':
+        """Detach the underlying cwipc_pointcloud_p pointer from this wrapper.
+        
+        After the call, this pointcloud is invalidated. The return value has the pointer
+        to the underlying data that used to be on this object, but it will _not_ be freed
+        when the Python object is deleted. The intention is that the returned object is
+        passed to another language that will take ownership of it.
+        """
+        if self._cwipc == None:
+            cwipc_log_default_callback(CWIPC_LOG_LEVEL_WARNING, b"detach() called on NULL pointer")
+        rv = type(self)(self._cwipc)
+        rv._must_be_freed = False
+        self._cwipc = None
+        self._must_be_freed = False
+        return rv
+    
     def close(self) -> None:
         if self._cwipc_encoder:
             cwipc_codec_dll_load().cwipc_encoder_close(self._as_cwipc_encoder_p())
@@ -166,20 +192,47 @@ class cwipc_encoder_wrapper:
         
 class cwipc_encodergroup_wrapper:
     _cwipc_encodergroup : Optional[cwipc_encodergroup_p]
+    _must_be_freed : bool
+
     def __init__(self, _cwipc_encodergroup : Optional[cwipc_encodergroup_p]):
         if _cwipc_encodergroup != None:
-            assert isinstance(_cwipc_encodergroup, cwipc_encodergroup_p)
+            if not isinstance(_cwipc_encodergroup, cwipc_encodergroup_p):
+                raise CwipcError("Invalid cwipc_encodergroup_p passed to cwipc_encodergroup_wrapper")
         self._cwipc_encodergroup = _cwipc_encodergroup
+        self._must_be_freed = True
         
+    def __del__(self):
+        if self._must_be_freed:
+            self.free(force=True)
+
     def _as_cwipc_encodergroup_p(self) -> cwipc_encodergroup_p:
         assert self._cwipc_encodergroup
         return self._cwipc_encodergroup
         
-    def free(self) -> None:
-        if self._cwipc_encodergroup:
+    def free(self, force : bool = False) -> None:
+        if self._cwipc_encodergroup and self._must_be_freed:
+            if not force:
+                cwipc_log_default_callback(CWIPC_LOG_LEVEL_WARNING, b'cwipc_encodergroup_wrapper.free() called explicitly.')
             cwipc_codec_dll_load().cwipc_encodergroup_free(self._as_cwipc_encodergroup_p())
         self._cwipc_encodergroup = None
+        self._must_be_freed = False
 
+    def detach(self) -> 'cwipc_encodergroup_wrapper':
+        """Detach the underlying cwipc_pointcloud_p pointer from this wrapper.
+        
+        After the call, this pointcloud is invalidated. The return value has the pointer
+        to the underlying data that used to be on this object, but it will _not_ be freed
+        when the Python object is deleted. The intention is that the returned object is
+        passed to another language that will take ownership of it.
+        """
+        if self._cwipc == None:
+            cwipc_log_default_callback(CWIPC_LOG_LEVEL_WARNING, b"detach() called on NULL pointer")
+        rv = type(self)(self._cwipc)
+        rv._must_be_freed = False
+        self._cwipc = None
+        self._must_be_freed = False
+        return rv
+    
     def close(self) -> None:
         if self._cwipc_encodergroup:
             cwipc_codec_dll_load().cwipc_encodergroup_close(self._as_cwipc_encodergroup_p())
