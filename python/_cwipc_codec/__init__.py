@@ -3,7 +3,7 @@ import ctypes
 import ctypes.util
 import warnings
 from typing import Optional, Any,Union
-from cwipc.util import CwipcError, CWIPC_API_VERSION, cwipc_wrapper, cwipc_source_wrapper
+from cwipc.util import CwipcError, CWIPC_API_VERSION, cwipc_pointcloud_wrapper, cwipc_source_wrapper
 from cwipc.util import cwipc_p, cwipc_source_p
 from cwipc.util import _cwipc_dll_search_path_collection # type: ignore
 
@@ -146,7 +146,7 @@ class cwipc_encoder_wrapper:
         rv = cwipc_codec_dll_load().cwipc_encoder_available(self._as_cwipc_encoder_p(), wait)
         return rv
         
-    def feed(self, pc: cwipc_wrapper) -> None:
+    def feed(self, pc: cwipc_pointcloud_wrapper) -> None:
         rv = cwipc_codec_dll_load().cwipc_encoder_feed(self._as_cwipc_encoder_p(), pc.as_cwipc_p())
         return rv
         
@@ -184,7 +184,7 @@ class cwipc_encodergroup_wrapper:
         if self._cwipc_encodergroup:
             cwipc_codec_dll_load().cwipc_encodergroup_close(self._as_cwipc_encodergroup_p())
 
-    def feed(self, pc : cwipc_wrapper) -> None:
+    def feed(self, pc : cwipc_pointcloud_wrapper) -> None:
         rv = cwipc_codec_dll_load().cwipc_encodergroup_feed(self._as_cwipc_encodergroup_p(), pc.as_cwipc_p())
         return rv
         
