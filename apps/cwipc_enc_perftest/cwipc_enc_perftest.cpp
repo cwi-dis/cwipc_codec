@@ -193,6 +193,7 @@ int main(int argc, char** argv) {
     double delta_wall = std::chrono::duration<double, std::milli>(t1_wall - t0_wall).count();
 
     std::cerr << std::fixed << std::setprecision(2) << progname << ": total runtime: " << delta_wall << "ms" << std::endl;
+    if (cwipc_dangling_allocations(true)) return 1;
 
     return 0;
 }

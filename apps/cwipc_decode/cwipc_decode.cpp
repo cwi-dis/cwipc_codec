@@ -69,5 +69,6 @@ int main(int argc, char** argv) {
     }
 
     pc->free(); // We no longer need to pointcloud
+    if (cwipc_dangling_allocations(true)) return 1;
     return 0;
 }

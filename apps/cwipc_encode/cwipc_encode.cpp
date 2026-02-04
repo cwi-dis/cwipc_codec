@@ -95,6 +95,7 @@ int main(int argc, char** argv)
     std::ofstream output(argv[2], std::ofstream::binary);
     output.write(buffer, bufSize);
     output.close();
+    if (cwipc_dangling_allocations(true)) return 1;
 
     return 0;
 }
