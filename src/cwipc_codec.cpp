@@ -118,8 +118,11 @@ public:
                 bool ok = this->_run_single_encode();
                 if (!ok) {
                     cwipc_log(CWIPC_LOG_LEVEL_ERROR, "cwipc_encoder", "threaded encoder failure");
+                    break;
                 }
             }
+            m_alive = false;
+            m_result_cv.notify_all();
         });
 
         m_thread_tilefilter = new std::thread([this] {
@@ -131,8 +134,11 @@ public:
                 bool ok = this->_run_single_tilefilter();
                 if (!ok) {
                     cwipc_log(CWIPC_LOG_LEVEL_ERROR, "cwipc_encoder", "threaded tilefilter failure");
+                    break;
                 }   
             }
+            m_alive = false;
+            m_queue_encoder.try_enqueue(nullptr);
         });
     }
 
