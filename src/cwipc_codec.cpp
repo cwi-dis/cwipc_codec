@@ -58,8 +58,7 @@ public:
         m_queue_encoder(1),
         m_thread_tilefilter(nullptr),
         m_thread_encoder(nullptr),
-        m_use_threads(false),
-        m_queued_pc(nullptr)
+        m_use_threads(false)
     {}
 
     ~cwipc_encoder_impl() {}
@@ -71,11 +70,6 @@ public:
             ::free(m_result);
         }
 
-        if (m_queued_pc) {
-            m_queued_pc->free();
-        }
-
-        m_queued_pc = nullptr;
         m_encoder = NULL;
         m_result = NULL;
         m_result_size = 0;
@@ -169,18 +163,12 @@ public:
         }
 
         if (m_use_threads) {
-            if (m_queued_pc) {
-                m_queued_pc->free();
-            }
 
-            m_queued_pc = pc;
-
-            pc = nullptr;
-            m_queue_tilefilter.enqueue(m_queued_pc);
+            m_queue_tilefilter.enqueue(pc->_shallowcopy());
         } else {
             bool ok;
 
-            ok = m_queue_tilefilter.try_enqueue(pc);
+            ok = m_queue_tilefilter.try_enqueue(pc->_shallowcopy());
             if (!ok) {
                 cwipc_log(CWIPC_LOG_LEVEL_ERROR, "cwipc_encoder", "unthreaded try_enqueue failed");
             }
@@ -294,7 +282,10 @@ private:
         m_remaining_frames_in_gop = m_params.do_inter_frame ? m_params.gop_size : 1;
 
         cwipc_pcl_pointcloud pcl_pc = newpc->access_pcl_pointcloud();
-
+        if (pcl_pc == nullptr) {
+            cwipc_log(CWIPC_LOG_LEVEL_ERROR, "cwipc_encoder", "Pointcloud has NULL cwipc_pcl_pointcloud");
+            return false;
+        }
         if (pcl_pc->size() == 0) {
             // Special case: if the point cloud is empty we compress a point cloud with a single black point at 0,0,0
             pcl_pc = new_cwipc_pcl_pointcloud();
@@ -351,7 +342,6 @@ private:
     std::thread* m_thread_tilefilter;
     std::thread* m_thread_encoder;
     bool m_use_threads;
-    cwipc_pointcloud *m_queued_pc;
 };
 
 class cwipc_multithreaded_encoder_impl : public cwipc_encoder {
@@ -483,8 +473,7 @@ public:
             }
         } else {
             // Make shallow clone of pc
-            newpc = cwipc_from_pcl(pc->access_pcl_pointcloud(), pc->timestamp(), nullptr, CWIPC_API_VERSION);
-            newpc->_set_cellsize(pc->cellsize());
+            newpc = pc->_shallowcopy();
         }
 
         pc = nullptr; // Ensure we don't access this anymore.
