@@ -264,7 +264,7 @@ private:
             newpc = cwipc_tilefilter(pc, m_params.tilenumber);
             pc->free();
             if (newpc == NULL) {
-                cwipc_log(CWIPC_LOG_LEVEL_ERROR, "cwipc_encoder", "tilefilter failed");
+                cwipc_log(CWIPC_LOG_LEVEL_ERROR, "cwipc_encoder", "tilefilter failed tile=" + std::to_string(m_params.tilenumber));
                 return false;
             }
         } else {
