@@ -174,17 +174,13 @@ class cwipc_encoder_wrapper:
         rv = cwipc_codec_dll_load().cwipc_encoder_available(self._as_cwipc_encoder_p(), wait)
         return rv
         
-    def feed(self, pc: cwipc_pointcloud_wrapper, *, force=False) -> None:
+    def feed(self, pc: cwipc_pointcloud_wrapper) -> None:
         """Feed the point cloud to the encoder.
-        
-        The point cloud must be detached. If you know what you are doing you can pass
-        the force=True flag to pass a non-detached point cloud."""
+        """
         if pc == None:
             cpc = None
         else:
             cpc = pc.as_cwipc_p()
-            if pc._must_be_freed and not force:
-                cwipc_log_default_callback(CWIPC_LOG_LEVEL_WARNING, b"Passing non-detached cwipc_pointcloud_wrapper to feed()")
         rv = cwipc_codec_dll_load().cwipc_encoder_feed(self._as_cwipc_encoder_p(), cpc)
         return rv
         
