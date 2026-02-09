@@ -245,13 +245,11 @@ class cwipc_encodergroup_wrapper:
         if self._cwipc_encodergroup:
             cwipc_codec_dll_load().cwipc_encodergroup_close(self._as_cwipc_encodergroup_p())
 
-    def feed(self, pc : cwipc_pointcloud_wrapper, *, force:bool=False) -> None:
+    def feed(self, pc : cwipc_pointcloud_wrapper) -> None:
         if pc == None:
             cpc = None
         else:
             cpc = pc.as_cwipc_p()
-            if pc._must_be_freed and not force:
-                cwipc_log_default_callback(CWIPC_LOG_LEVEL_WARNING, b"Passing non-detached cwipc_pointcloud_wrapper to feed()")
         rv = cwipc_codec_dll_load().cwipc_encodergroup_feed(self._as_cwipc_encodergroup_p(), cpc)
         return rv
         
