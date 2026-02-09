@@ -16,6 +16,10 @@ COMPRESSED_FILENAME=os.path.join(TEST_FIXTURES_DIR, "compressed", "pcl_frame1.cw
 
 class TestApi(unittest.TestCase):
         
+    def test_0_check_module_codec(self):
+        ok = cwipc.cwipc_check_module('codec')
+        self.assertTrue(ok)
+
     def test_cwipc_new_encoder(self):
         """Can we create and free a cwipc_encoder object"""
         encoder = _cwipc_codec.cwipc_new_encoder()

@@ -60,6 +60,8 @@ def cwipc_codec_dll_load(libname : Optional[str]=None) -> ctypes.CDLL:
         if not _cwipc_codec_dll_reference:
             raise RuntimeError(f'Dynamic library {libname} cannot be loaded')
     
+    _cwipc_codec_dll_reference.cwipc_get_version_codec.argtypes = []
+    _cwipc_codec_dll_reference.cwipc_get_version_codec.restype = ctypes.c_char_p
 
     _cwipc_codec_dll_reference.cwipc_new_encoder.argtypes = [ctypes.c_int, ctypes.POINTER(cwipc_encoder_params), ctypes.POINTER(ctypes.c_char_p), ctypes.c_ulong]
     _cwipc_codec_dll_reference.cwipc_new_encoder.restype = cwipc_encoder_p
@@ -304,6 +306,12 @@ def cwipc_new_encoder_params(**kwargs : Any) -> cwipc_encoder_params:
         assert hasattr(params, k), 'No encoder_param named {}'.format(k)
         setattr(params, k, v)
     return params
+
+
+def cwipc_get_version_module() -> str:
+    c_version = cwipc_codec_dll_load().cwipc_get_version_codec()
+    version = c_version.decode('utf8')
+    return version
 
 def cwipc_new_encoder(version : Optional[int]=None, params : Union[dict[str,Any], cwipc_encoder_params, None]=None, **kwargs :  Any) -> cwipc_encoder_wrapper:
     if version == None:

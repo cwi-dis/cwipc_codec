@@ -23,6 +23,9 @@
 #include <pcl/point_cloud.h>
 #include <pcl/cloud_codec_v2/point_cloud_codec_v2.h>
 
+#define stringify(x) _stringify(x)
+#define _stringify(x) #x
+
 //
 // Define the codec we want to use. Main options are probably using OctreeBase or Octree2BufBase.
 //
@@ -644,6 +647,20 @@ private:
     pcl::shared_ptr<cwipc_pointcloud_codec > m_decoder_V2_;
     bool m_alive;
 };
+
+
+//
+// C-compatible entry points
+//
+
+
+const char *cwipc_get_version_codec() {
+#ifdef CWIPC_VERSION
+    return stringify(CWIPC_VERSION);
+#else
+    return "unknown";
+#endif
+}
 
 cwipc_encoder* cwipc_new_encoder(int version, cwipc_encoder_params *params, char **errorMessage, uint64_t apiVersion) {
     if (apiVersion < CWIPC_API_VERSION_OLD || apiVersion > CWIPC_API_VERSION) {

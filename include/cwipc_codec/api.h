@@ -225,6 +225,12 @@ typedef struct _cwipc_decoder {
 #ifdef __cplusplus
 extern "C" {
 #endif
+/** \brief
+ * Returns version string for realsense2 capturer module.
+ * As a side effect this checks that dependencies have been installed correctly, and it will install the
+ * capturer for use with the auto-capturer.
+ */
+_CWIPC_CODEC_EXPORT const char *cwipc_get_version_codec();
 
 /** \brief Create pointcloud decompressor.
  *
