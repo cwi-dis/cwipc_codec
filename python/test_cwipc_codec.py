@@ -198,7 +198,8 @@ class TestApi(unittest.TestCase):
     def test_cwipc_multiencoder_octree_depth(self):
         """Test that a multiencoder setup for 2 octree depths returns sensible pointclouds"""
         gen = cwipc.cwipc_synthetic()
-        gen.start()
+        didStart = gen.start()
+        self.assertTrue(didStart)
         pc_orig = gen.get()
         self.assertIsNotNone(pc_orig)
         assert pc_orig # Only to keep linters happy
@@ -219,7 +220,8 @@ class TestApi(unittest.TestCase):
     def test_cwipc_parallel_encoder(self):
         """Test that a parallel encoder returns the same compressed data as a non-parallel one"""       
         gen = cwipc.cwipc_synthetic()
-        gen.start()
+        didStart = gen.start()
+        self.assertTrue(didStart)
         params1 = _cwipc_codec.cwipc_new_encoder_params()
         params2 = _cwipc_codec.cwipc_new_encoder_params()
         enc1 = _cwipc_codec.cwipc_new_encoder(params=params1)
