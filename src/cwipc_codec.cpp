@@ -114,7 +114,9 @@ public:
             while (m_alive) {
                 bool ok = this->_run_single_encode();
                 if (!ok) {
-                    cwipc_log(CWIPC_LOG_LEVEL_ERROR, "cwipc_encoder", "threaded encoder failure");
+                    if (m_alive) {
+                        cwipc_log(CWIPC_LOG_LEVEL_ERROR, "cwipc_encoder", "threaded encoder failure");
+                    }
                     break;
                 }
             }
@@ -130,7 +132,9 @@ public:
             while (m_alive) {
                 bool ok = this->_run_single_tilefilter();
                 if (!ok) {
-                    cwipc_log(CWIPC_LOG_LEVEL_ERROR, "cwipc_encoder", "threaded tilefilter failure");
+                    if (m_alive) {
+                        cwipc_log(CWIPC_LOG_LEVEL_ERROR, "cwipc_encoder", "threaded tilefilter failure");
+                    }
                     break;
                 }   
             }
