@@ -1,3 +1,8 @@
+# WARNING. This repository is outdated.
+
+This `cwipc_codec` repository has been merged into the <https://github.com/cwi-dis/cwipc> repository as of August 2026.
+
+
 > Copyright (c) 2017-2026, Stichting Centrum Wiskunde en Informatica (CWI).
 
 This repository is a compression library for `cwipc` pointcloud objects. It is part of the `cwipc` suite, <https://github.com/cwi-dis/cwipc>, and should generally be installed or built as part of that suite. 
